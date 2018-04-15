@@ -1,8 +1,27 @@
 # MusicWithoutDelay Library
+First Download [Tone library](https://github.com/bhagman/Tone) from bhagman. My library requires you have it.
+* This library was inspired by [Bhagman's RTTL Arduino sketch](https://github.com/bhagman/Tone/blob/master/examples/RTTTL/RTTTL.pde).
 
-This Arduino Library makes an Arduino board play music in the background while running your program(Assuming your code doesn't have any delay).  This library doesn't use the delay function; it uses a similar technique to [Arduino's BlinkWithoutDelay sketch](https://www.arduino.cc/en/Tutorial/BlinkWithoutDelay).  I used advanced logic from my computer science skills and wrote the non-blocking algorithm for this library.  You do not need any shield or extra hardware for this library, but you will have to download [Tone library](https://github.com/bhagman/Tone) from bhagman. In fact, this library was inspired by [Bhagman's RTTL Arduino sketch](https://github.com/bhagman/Tone/blob/master/examples/RTTTL/RTTTL.pde).
+## Demonstration
 
-And Yes, **you can play more than one note at the same time**.  Check out the video below for a Legend of Zelda music demostration.  In the video, an Arduino Nano outputs two voices. The arduino uses a vibrating motor as a percussion instrument, and an RGB LED to add some fire to the show.  The delay function is not used at all :)
+   Check out the video below for a Legend of Zelda music demostration.  In the video, an Arduino Nano outputs two voices. The arduino uses a vibrating motor as a percussion instrument, and an RGB LED to add some fire to the show.  The delay function is not used at all :)
+
+## Advantages
+* This Arduino Library makes an Arduino board play music in the background while running your program(Assuming your code doesn't have any delay).  
+  * **So you can view the Serial Monitor, display stuff on an OLED, and read buttons while this library plays your music in the background**
+  * This library doesn't use the delay function; it uses a similar technique to [Arduino's BlinkWithoutDelay sketch](https://www.arduino.cc/en/Tutorial/BlinkWithoutDelay).
+* You do not need any shield or extra hardware for this library.
+* **You can play more than one note at the same time**
+* Cool Features
+  * Pause/resume Song
+  * Reverse direction of song 
+  * skipTo a favorite part in the song(The hardest to program, but it was worth it)
+
+## Disadvantages(Soon to be fixed)
+* Can't play more than two notes on many arduino boards.
+* Tone library creates timer conflicts with Servo library
+  * I am trying to move away from the Tone library because many common libraries hate it. :D
+* No volume Control
 
 ## Quick Start(For First-Time Explorers)
    1. Install this library by downloading the zip folder.  Read [this Arduino Library Tutorial](https://www.arduino.cc/en/Guide/Libraries) to install the library.
@@ -14,7 +33,7 @@ And Yes, **you can play more than one note at the same time**.  Check out the vi
    
 ![alt text](https://raw.githubusercontent.com/nathanRamaNoodles/MusicWithoutDelay-LIbrary/master/MusicWithoutDelay.png "Schematic")
 
-## How to write Music
+# How to write Music
 
    You may be wondering how one can write songs for the Arduino without any knowledge of Music!  Its actually quite interesting and fun.  First you need to know the value of the notes in Music.
    ![alt text](http://ezstrummer.com/ezriffs/demo/notes_rests.gif "Note Values")
@@ -117,3 +136,23 @@ Let's use some examples to understand the format of the song file.
 10. Question: Play notes with whitespaces(whitespaces make it easier to write music since it's easier on the eyes)
     * Answer: char * name = ":: 12c , 12b , 12a , 4a , 4b , 4c , 2g , 2a , d";  //The library is user-friendly, it ignores spaces **(but don't put spaces in between the definitions of the notes)** So don't do this ":: 12 c # ,".
     
+
+# Functions
+  1. play(long cMillis, Tone tone1)// plays the song
+  2. pause();           //pauses and resumes song
+  3. newSong(char * p)  //used to play a new song
+  4. setBPM(int tempo)  //set speed of song
+  5. setOctave(int oct) //set octave
+  6. reverse()          //reverse direction of song being played
+  7. getTotalTime()     //gets totalTime of song in milliseconds
+  8. getCurrentTime()   //gets currentTime of song in milliseconds
+  9. getBPM()
+  10. getOctave()
+  11. getName()         //get name of song
+  12. isRest()          //returns true if song is playing a rest
+  13. isStart()         //returns true if song has reached the beginning
+  14. isEnd()           //returns true if song has reached the end
+  15. isPaused()        //returns true if song is paused
+  16. isNote()          //returns true if song is playing a note
+  17. isBackwards()     //returns true if song is playing backwards
+  18. skipTo(long index)//skips song to time suggested
