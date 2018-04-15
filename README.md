@@ -29,7 +29,10 @@ First Download [Tone library](https://github.com/bhagman/Tone) from bhagman. My 
    3. Choose the "Basics" sketch.
    4. Attach a speaker with a 200 ohm resistor to pin 11, then attach the other end of the speaker to ground.
    5. Upload the code.
-   6. The comments in the code should be helpful.  And try the other examples included with this library to learn to program without Delay.
+   6. Type "s" in the Serial monitor(which is set to 9600 baud rate)
+      * You should get something positive in return ;)
+      * If you got something in return, it proves that my library doesn't use Delay.
+   7. The comments in the code should be helpful.  And try the other examples included with this library to learn to program without Delay.
    
 ![alt text](https://raw.githubusercontent.com/nathanRamaNoodles/MusicWithoutDelay-LIbrary/master/MusicWithoutDelay.png "Schematic")
 
