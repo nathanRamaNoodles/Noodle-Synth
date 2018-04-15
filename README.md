@@ -1,6 +1,6 @@
 # MusicWithoutDelay Library
 
-This Arduino Library makes an Arduino board play music in the background while running your program(Assuming your code doesn't have any delay).  You do not need any shield or extra hardware for this library, but you will have to download [Tone library](https://github.com/bhagman/Tone) from bhagman. 
+This Arduino Library makes an Arduino board play music in the background while running your program(Assuming your code doesn't have any delay).  This library doesn't use the delay function; it uses a similar technique to [Arduino's BlinkWithoutDelay sketch](https://www.arduino.cc/en/Tutorial/BlinkWithoutDelay).  I used advanced logic from my computer science skills and wrote the non-blocking algorithm for this library.  You do not need any shield or extra hardware for this library, but you will have to download [Tone library](https://github.com/bhagman/Tone) from bhagman. In fact, this library was inspired by [Bhagman's RTTL Arduino sketch](https://github.com/bhagman/Tone/blob/master/examples/RTTTL/RTTTL.pde).
 
 And Yes, **you can play more than one note at the same time**.  Check out the video below for a Legend of Zelda music demostration.  In the video, an Arduino Nano outputs two voices. The arduino uses a vibrating motor as a percussion instrument, and an RGB LED to add some fire to the show.  The delay function is not used at all :)
 
@@ -76,7 +76,7 @@ And Yes, **you can play more than one note at the same time**.  Check out the vi
     * Put a plus sign to indicate the next note is a slur with the current note
       * ex: b+c  means that the notes will be played like a slur in music(without taking a breath)
     
-So using these format rules, we can make this ordered outline
+So using these format rules, we can make this ordered outline for the definition of a Note.
 1. duration   (optional)
 2. period     (optional)
 3. letter     **(required)**
@@ -115,5 +115,5 @@ Let's use some examples to understand the format of the song file.
    * Answer: char * name = "::4.a_-1";
    
 10. Question: Play notes with whitespaces(whitespaces make it easier to write music since it's easier on the eyes)
-    * Answer: char * name = "::12c,12b,12a,    4a,4b,4c,   2g,2a,  d";  //The library is user-friendly, it ignores spaces **(but don't put spaces in between the definitions of the notes)** So don't do this ":: 12 c # ,".
+    * Answer: char * name = ":: 12c , 12b , 12a , 4a , 4b , 4c , 2g , 2a , d";  //The library is user-friendly, it ignores spaces **(but don't put spaces in between the definitions of the notes)** So don't do this ":: 12 c # ,".
     
