@@ -9,7 +9,7 @@
    Pressing one button pauses te song, and another button skips the song to a specific section in each scene. There are a total of 5 scenes. I made scenes in order to save Arduino Memory.
    Music order: intro->same->middle->same->end (repeat last steps except intro)
 */
-//To learn more about this project go to https://github.com/nathanRamaNoodles/MusicWithoutDelay
+//To learn more about this project go to https://github.com/nathanRamaNoodles/MusicWithoutDelay-LIbrary
 #include <Button.h>      //https://github.com/JChristensen/Button
 #include <Tone.h>        //https://github.com/bhagman/Tone
 #include <MusicWithoutDelay.h>
