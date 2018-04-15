@@ -1,14 +1,10 @@
 /*Example for the MusicWithoutDelay Library by Nathan Ramanathan. nathan6ramanathan@gmail.com
-   This sketch demostrates the skipTo function's advantage.  It can skip to any point of the song :D
-   It plays a small section of the legend of Zelda Song.
+   This sketch demostrates the isNote function's advantage. It can be used for percussion :D
+   It plays a small section of the Entertainer Song.
    Obviously, you can do other things while the song is being played.
    For example, talk to Serial, read buttons, display images on an OLED screen, etc...
-
-   Pressing either button on pin 2 or 3 causes the song to skip to the beginning or anywhere.
-
-   This is by far the most complex, beautiful, mathematical function I have created.  :')
-   Use skipTo(long) wisely
 */
+// More info at https://github.com/nathanRamaNoodles/MusicWithoutDelay-LIbrary
 #include <MusicWithoutDelay.h>
 #include <Tone.h>                //https://github.com/bhagman/Tone
 Tone myTone;
