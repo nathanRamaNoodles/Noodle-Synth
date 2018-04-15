@@ -1,5 +1,6 @@
 /*
   MusicWithoutDelay.h - Library for playing music at multiple pins without Using Delay. Also uses the Tone library.
+  https://github.com/nathanRamaNoodles/MusicWithoutDelay-LIbrary
   MusicWithoutDelay Created by Nathan Ramanathan(nathan6ramanathan@gmail.com), March 21, 2018
   The Tone Library was created by David A. Mellis on November 2, 2007.
   Released into the public domain.
