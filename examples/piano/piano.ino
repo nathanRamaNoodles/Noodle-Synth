@@ -9,7 +9,7 @@
    When you press any button, a note will be played according to the char*.
    **You can play more than one note by pressing both buttons!!
 */
-//To learn more about this project go to https://github.com/nathanRamaNoodles/MusicWithoutDelay
+//To learn more about this project go to https://github.com/nathanRamaNoodles/MusicWithoutDelay-LIbrary
 
 #include <Button.h>  //https://github.com/JChristensen/Button  acquired by JChristensen's popular button library
 #include <MusicWithoutDelay.h>
