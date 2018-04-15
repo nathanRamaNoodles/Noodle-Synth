@@ -17,7 +17,6 @@ pause	KEYWORD2
 newSong	KEYWORD2
 setBPM	KEYWORD2
 setOctave	KEYWORD2
-setTimeSig	KEYWORD2
 reverse	KEYWORD2
 skipTo	KEYWORD2
 getTotalTime	KEYWORD2
