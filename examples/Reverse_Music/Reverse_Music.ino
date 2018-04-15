@@ -12,7 +12,7 @@
 
    This is one of my funny and beautiful functions I made.  XD
 */
-//To learn more about this project go to https://github.com/nathanRamaNoodles/MusicWithoutDelay
+//To learn more about this project go to https://github.com/nathanRamaNoodles/MusicWithoutDelay-LIbrary
 
 #include <Tone.h>    //https://github.com/bhagman/Tone
 #include <Button.h>  //https://github.com/JChristensen/Button
