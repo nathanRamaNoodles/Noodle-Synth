@@ -1,3 +1,4 @@
+//documentation found at https://github.com/nathanRamaNoodles/MusicWithoutDelay-LIbrary
 #include "Arduino.h"
 #include "MusicWithoutDelay.h"
 int notes[] = { 0,
