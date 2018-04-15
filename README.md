@@ -14,7 +14,7 @@ First Download [Tone library](https://github.com/bhagman/Tone) from bhagman. My 
 * **You can play more than one note at the same time**
 * Cool Features
   * Pause/resume Song
-  * Reverse direction of song 
+  * Play song forward and backwards!! :D 
   * skipTo a favorite part in the song(The hardest to program, but it was worth it)
 
 ## Disadvantages(Soon to be fixed)
