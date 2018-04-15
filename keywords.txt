@@ -1,0 +1,36 @@
+#######################################
+# Syntax Coloring Map For Tone
+#######################################
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+
+MusicWithoutDelay	KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+
+play	KEYWORD2
+pause	KEYWORD2
+newSong	KEYWORD2
+setBPM	KEYWORD2
+setOctave	KEYWORD2
+setTimeSig	KEYWORD2
+reverse	KEYWORD2
+skipTo	KEYWORD2
+getTotalTime	KEYWORD2
+getCurrentTime	KEYWORD2
+getBPM	KEYWORD2
+getOctave	KEYWORD2
+getName	KEYWORD2
+isRest	KEYWORD2
+isStart	KEYWORD2
+isEnd	KEYWORD2
+isPaused	KEYWORD2
+isNote	KEYWORD2
+isBackwards	KEYWORD2
+#######################################
+# Constants (LITERAL1)
+#######################################
