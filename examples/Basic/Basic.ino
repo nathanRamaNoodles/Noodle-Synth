@@ -6,13 +6,13 @@
    Obviously, you can do other things while the song is being played.
    For example, talk to Serial, read buttons, display images on an OLED screen, etc...
 */
-//To learn more about this project go to https://github.com/nathanRamaNoodles/MusicWithoutDelay
+//To learn more about this project go to https://github.com/nathanRamaNoodles/MusicWithoutDelay-LIbrary
 #include <MusicWithoutDelay.h>
 #include <Tone.h>                //https://github.com/bhagman/Tone
 char *song = ":d=4:c,d,e,f,g,a,b,c1";  //the C major scale. This format is known as RingTone Transfer Language or RTTL(It was used by Nokia's phone company).
 MusicWithoutDelay instrument(song);          //d=4 means that every note without a number in front of the letter is assumed to be a quarter note.
 Tone myTone;
-void setup() {                               //For details on the RTTL format, look at https://github.com/nathanRamaNoodles/MusicWithoutDelay documentation
+void setup() {                               //For details on the RTTL format, look at https://github.com/nathanRamaNoodles/MusicWithoutDelay-LIbrary documentation
   // put your setup code here, to run once:
   myTone.begin(11);  //connect speaker with 200 ohm resistor to pin 11.
   Serial.begin(9600);
