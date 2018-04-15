@@ -81,7 +81,7 @@ So using these format rules, we can make this ordered outline
 3. letter     **(required)**
 4. sharp/flat (optional)
 5. octave     (optional)
-6. "," or "+" (required)    
+6. "," or "+" **(required)**    
     
 Let's use some examples to understand the format of the song file.  
 
@@ -110,4 +110,9 @@ Let's use some examples to understand the format of the song file.
 8. Question: Slur every three notes
    * Answer: char * name = "::a+b+c,c+d+e";
 
-
+9. Question: Combine note with all possible options
+   * Answer: char * name = "::4.a_-1";
+   
+10. Question: Play notes with whitespaces(whitespaces make it easier to write music since it's easier on the eyes)
+    * Answer: char * name = "::12c,12b,12a,    4a,4b,4c,   2g,2a,  d";  //The library is user-friendly, it ignores spaces **(but don't put spaces in between the definitions of the notes)** So don't do this ":: 12 c # ,".
+    
