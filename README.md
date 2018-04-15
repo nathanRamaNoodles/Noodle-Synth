@@ -1,15 +1,16 @@
 # MusicWithoutDelay Library
 
-This Arduino Library is makes an Arduino board play music in the background while running your program(Assuming your code doesn't have any delay).
+This Arduino Library makes an Arduino board play music in the background while running your program(Assuming your code doesn't have any delay).
 
 And Yes, **you can play more than one note at the same time**.  Check out the video below for a Legend of Zelda music demostration.  In the video, an Arduino Nano outputs two voices. The arduino uses a vibrating motor as a percussion instrument, and an RGB LED to add some fire to the show.  The delay function is not used at all :)
 
-## Quick Start(For First Time Explorers)
+## Quick Start(For First-Time Explorers)
    1. Install this library by downloading the zip folder.  Read [this Arduino Library Tutorial](https://www.arduino.cc/en/Guide/Libraries) to install the library.
    2. Open the examples folder after installing the library.  
    3. Choose the "Basics" sketch.
    4. Attach a speaker with a 200 ohm resistor to pin 11, then attach the other end of the speaker to ground.
-   5. Upload the code
+   5. Upload the code.
+   6. The comments in the code should be helpful.  And try the other examples included with this library to learn to program without Delay.
    
 ![alt text](https://raw.githubusercontent.com/nathanRamaNoodles/MusicWithoutDelay-LIbrary/master/MusicWithoutDelay.png "Schematic")
 
@@ -85,7 +86,7 @@ So using these format rules, we can make this ordered outline
     
 Let's use some examples to understand the format of the song file.  
 
-### Examples
+## Examples
 1. Question: Lets try to play the letter C    
    * Answer: char * name = "::c";
 
