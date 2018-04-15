@@ -1,6 +1,6 @@
 # MusicWithoutDelay Library
 
-This Arduino Library makes an Arduino board play music in the background while running your program(Assuming your code doesn't have any delay).
+This Arduino Library makes an Arduino board play music in the background while running your program(Assuming your code doesn't have any delay).  You do not need any shield or extra hardware for this library, but you will have to download [Tone library](https://github.com/bhagman/Tone) from bhagman. 
 
 And Yes, **you can play more than one note at the same time**.  Check out the video below for a Legend of Zelda music demostration.  In the video, an Arduino Nano outputs two voices. The arduino uses a vibrating motor as a percussion instrument, and an RGB LED to add some fire to the show.  The delay function is not used at all :)
 
