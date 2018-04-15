@@ -17,6 +17,7 @@ This Arduino Library is makes an Arduino board play music in the background whil
    ![alt text](http://ezstrummer.com/ezriffs/demo/notes_rests.gif "Note Values")
    
    Triplets= 1/3
+   
    Now, remember these values.
    You will need them in the next step.
  ## The Arduino Code
@@ -27,18 +28,25 @@ This Arduino Library is makes an Arduino board play music in the background whil
  ![alt text](https://raw.githubusercontent.com/nathanRamaNoodles/MusicWithoutDelay-LIbrary/master/char%20song.PNG "storage Variable")
 
 ### Format(RTTL or Ring Tone Transfer Language)
-  char * name =  " name of song :d=4,o=5,b=160,f=be,s=a: a,b,c1#,d1_,c-1";
+  char * name =  " name of song :settings: notes";
   
   1.The name of the Song can be set before the first semicolon. **(optional)**
   
+  **The settings can be in any order**
+  
   2.The settings for the song are set inbetween the first and second semicolon **(optional)**
-    * d= The default duration.  So any note(letter) without a number in front will automatically be assigned with the default duration
-    * o= The default Ocatve.
-    * s= The sharps
-      * s=aeb, means all a's, e's, and b's in the song are sharps
-    * f= The Flats
-      * f=aeb, means all a's, e's, and b's in the song are flats
-      
+  * d= The default duration. So any note(letter) without a number in front will automatically be assigned with the default duration
+    * By default, d=1 which is a wholenote
+  * o= The default Octave.
+    * By default, o=4 which is middle C on the Piano
+  * b= the BPM(Beat per Minute) or the Tempo of the Song
+    * By default, b=100, which is normal tempo in music
+  * s= The sharps
+    * s=aeb, means all a's, e's, and b's in the song are sharps
+  * f= The Flats
+    * f=aeb, means all a's, e's, and b's in the song are flats
+  
+  
   3.The song's notes are made after the second semicolon. **(required)**
   * there are only 7 possible letters. a,b,c,d,e,f,g
   * the duration of each note is made before the letter
