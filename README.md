@@ -75,7 +75,13 @@ And Yes, **you can play more than one note at the same time**.  Check out the vi
     * Put a plus sign to indicate the next note is a slur with the current note
       * ex: b+c  means that the notes will be played like a slur in music(without taking a breath)
     
-So using these format rules, we can make this outline **= " duration period letter sharp/flat octave  " **
+So using these format rules, we can make this ordered outline
+1. duration   (optional)
+2. period     (optional)
+3. letter     **(required)**
+4. sharp/flat (optional)
+5. octave     (optional)
+6. "," or "+" (required)    
     
 Let's use some examples to understand the format of the song file.  
 
