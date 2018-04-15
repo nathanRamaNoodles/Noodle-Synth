@@ -3,6 +3,7 @@
    Obviously, you can do other things while the song is being played.
    For example, talk to Serial, read buttons, display images on an OLED screen, etc...
 */
+//more info at https://github.com/nathanRamaNoodles/MusicWithoutDelay-LIbrary
 #include <MusicWithoutDelay.h>
 #include <Tone.h>                //https://github.com/bhagman/Tone
 Tone myTone;
