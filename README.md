@@ -2,6 +2,8 @@
 
 This Arduino Library is makes an Arduino board play music in the background while running your program(Assuming your code doesn't have any delay).
 
+And Yes, **you can play more than one note at the same time**.  Check out the video below for a Legend of Zelda music demostration.  In the video, an Arduino Nano outputs two voices. The arduino uses a vibrating motor as a percussion instrument, and an RGB LED to add some fire to the show.  The delay function is not used at all :)
+
 ## Quick Start(For First Time Explorers)
    1. Install this library by downloading the zip folder.  Read [this Arduino Library Tutorial](https://www.arduino.cc/en/Guide/Libraries) to install the library.
    2. Open the examples folder after installing the library.  
@@ -28,46 +30,51 @@ This Arduino Library is makes an Arduino board play music in the background whil
  ![alt text](https://raw.githubusercontent.com/nathanRamaNoodles/MusicWithoutDelay-LIbrary/master/char%20song.PNG "storage Variable")
 
 ### Format(RTTL or Ring Tone Transfer Language)
-  char * name =  " name of song :settings: notes";
+  char * name =  " name of song : settings : notes";
+  #### Name(Optional)
   
-  1.The name of the Song can be set before the first semicolon. **(optional)**
+  * The name of the Song can be set before the first semicolon.
   
-  **The settings can be in any order**
+  #### The Settings(Optional)
   
-  2.The settings for the song are set inbetween the first and second semicolon **(optional)**
-  * d= The default duration. So any note(letter) without a number in front will automatically be assigned with the default duration
-    * By default, d=1 which is a wholenote
-  * o= The default Octave.
-    * By default, o=4 which is middle C on the Piano
-  * b= the BPM(Beat per Minute) or the Tempo of the Song
-    * By default, b=100, which is normal tempo in music
-  * s= The sharps
-    * s=aeb, means all a's, e's, and b's in the song are sharps
-  * f= The Flats
-    * f=aeb, means all a's, e's, and b's in the song are flats
+  * The settings for the song are set in-between the first and second semicolon(You may use a comma or white space between each setting option) 
+    * d= The default duration. So any note(letter) without a number in front will automatically be assigned with the default duration
+      * By default, d=1 which is a wholenote
+    * o= The default Octave.
+      * By default, o=4 which is middle C on the Piano
+    * b= the BPM(Beat per Minute) or the Tempo of the Song
+      * By default, b=100, which is normal tempo in music
+    * s= The sharps
+      * Ex: s=aeb, means all a's, e's, and b's in the song are sharps
+    * f= The Flats
+      * Ex: f=aeb, means all a's, e's, and b's in the song are flats
   
+  #### Notes(Required)
   
-  3.The song's notes are made after the second semicolon. **(required)**
-  * there are only 7 possible letters. a,b,c,d,e,f,g
-  * the duration of each note is made before the letter
-    * ex: 4f is a quarter note
-  * The duration can be determined by this formula.
-    * **Formula: 4/(note value)= duration.  So an eight note would be 4/(1/2) = 8.**
-  * To name a letter a flat put an underscore _ right after the letter
-    * ex: b_
-  * To name a letter a sharp put a # right after the letter
-    * ex: c#
-  * To raise a note up an Octave, put the number of octaves to be raised after the Sharp/Flats/Letter
-    * ex: b1 
-  * To drop a note down an Octave, put a minus sign and then the number of octaves to be dropped after the Sharp/Flats/Letter
-    * ex: b-1
-Lets talk about some examples to understand the format of the song file.  
+  * The song's notes are made after the second semicolon.
+    * there are only 7 possible letters. a,b,c,d,e,f,g
+    * the duration of each note is made before the letter
+      * ex: 4f is a quarter note
+    * The duration can be determined by this formula.
+      * **Formula: 4/(note value)= duration.  So an eight note would be 4/(1/2) = 8.**
+    * To name a letter a flat put an underscore _ right after the letter
+      * ex: b_
+    * To name a letter a sharp put a # right after the letter
+      * ex: c#
+    * To raise a note up an Octave, put the number of octaves to be raised after the Sharp/Flats/Letter
+      * ex: b1 
+      * ex2: c#1
+    * To drop a note down an Octave, put a minus sign and then the number of octaves to be dropped after the Sharp/Flats/Letter
+      * ex: b-1
+      * ex: c#-2
+    
+Let's use some examples to understand the format of the song file.  
 
 ### Examples
 1. Question: Lets try to play the letter C 
    
-   Answer: char * name = "::c";
+*Answer: char * name = "::c";
 
 2. Question: Lets try to play the letter C 
    
-   Answer: char * name = "::c";
+*Answer: char * name = "::c";
