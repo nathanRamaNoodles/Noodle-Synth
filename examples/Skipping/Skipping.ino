@@ -9,7 +9,7 @@
    This is by far the most complex, beautiful, mathematical function I have created.  :')
    Use skipTo(long) wisely
 */
-//To learn more about this project go to https://github.com/nathanRamaNoodles/MusicWithoutDelay
+//To learn more about this project go to https://github.com/nathanRamaNoodles/MusicWithoutDelay-LIbrary
 #include <MusicWithoutDelay.h>
 #include <Button.h>  //https://github.com/JChristensen/Button  acquired by JChristensen's popular button library
 #include <Tone.h>                //https://github.com/bhagman/Tone
