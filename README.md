@@ -50,7 +50,7 @@ And Yes, **you can play more than one note at the same time**.  Check out the vi
       * Ex: f=aeb, means all a's, e's, and b's in the song are flats
   
   #### Notes(Required)
-  **order format for a single note = " duration period letter sharp/flat octave  "**
+  
   * The song's notes are made after the second semicolon.
     * there are only 7 possible letters. a,b,c,d,e,f,g
     * A rest uses the letter "p"
@@ -74,6 +74,8 @@ And Yes, **you can play more than one note at the same time**.  Check out the vi
       * ex: b,c  means that the notes will be played one after the other(taking a breath)
     * Put a plus sign to indicate the next note is a slur with the current note
       * ex: b+c  means that the notes will be played like a slur in music(without taking a breath)
+    
+So using these format rules, we can make this outline **= " duration period letter sharp/flat octave  " **
     
 Let's use some examples to understand the format of the song file.  
 
