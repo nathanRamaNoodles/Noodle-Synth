@@ -7,6 +7,8 @@ First Download [Tone library](https://github.com/bhagman/Tone) from bhagman. My 
    Check out the video below for a Legend of Zelda music demostration.  In the video, an Arduino Nano outputs two voices. The arduino uses a vibrating motor as a percussion instrument, and an RGB LED to add some fire to the show.  The delay function is not used at all :)
    
 [Click here for Video](https://youtu.be/uoHhlrqZYDI "Demonstration Video")
+
+[Here is the link for the instructions from the video](https://create.arduino.cc/projecthub/nathan_ramanathan/music-without-delay-mp3-player-40e51b?ref=user&ref_id=185277&offset=0)
 ## Advantages
 * This Arduino Library makes an Arduino board play music in the background while running your program(Assuming your code doesn't have any delay).  
   * **So you can view the Serial Monitor, display stuff on an OLED, and read buttons while this library plays your music in the background**
