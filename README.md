@@ -128,7 +128,7 @@ Let's use some examples to understand the format of the song file.
    * Answer: char * name = ":b=160:c,d,e,f,g,a,b,c1";
 
 6. Question: Play some dotted quarter notes
-   * Answer: char * name = "::4.c,8.d,2.e";
+   * Answer: char * name = ":d=4:4.c,4.d,.e";
 
 7. Question: play a note every second
    * Answer: char * name = ":d=4,b=60:c,p";  //bpm=60 means a quarter note = 1 second
@@ -144,6 +144,7 @@ Let's use some examples to understand the format of the song file.
     
 
 # Functions
+```
   1. play(long cMillis, Tone tone1)// plays the song
   2. pause();           //pauses and resumes song
   3. newSong(char * p)  //used to play a new song
@@ -162,3 +163,4 @@ Let's use some examples to understand the format of the song file.
   16. isNote()          //returns true if song is playing a note
   17. isBackwards()     //returns true if song is playing backwards
   18. skipTo(long index)//skips song to time suggested
+```
