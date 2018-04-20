@@ -162,5 +162,5 @@ Let's use some examples to understand the format of the song file.
   15. isPaused()        //returns true if song is paused
   16. isNote()          //returns true if song is playing a note
   17. isBackwards()     //returns true if song is playing backwards
-  18. skipTo(long index)//skips song to time suggested
+  18. skipTo(long index)//skips song to time suggested(must be in milliseconds) so 3 seconds into the song would be skipTo(3*1E3)
 ```
