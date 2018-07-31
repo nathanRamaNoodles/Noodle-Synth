@@ -9,44 +9,80 @@
    When you press any button, a note will be played according to the char*.
    **You can play more than one note by pressing both buttons!!
 */
-//To learn more about this project go to https://github.com/nathanRamaNoodles/MusicWithoutDelay-LIbrary
+/*
+  MIT License
 
-#include <Button.h>  //https://github.com/JChristensen/Button  acquired by JChristensen's popular button library
+  Copyright (c) 2018 nathanRamaNoodles
+
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files (the "Software"), to deal
+  in the Software without restriction, including without limitation the rights
+  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+  copies of the Software, and to permit persons to whom the Software is
+  furnished to do so, subject to the following conditions:
+
+  The above copyright notice and this permission notice shall be included in all
+  copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+  SOFTWARE.
+*/
+//To learn more about this project go to https://github.com/nathanRamaNoodles/MusicWithoutDelay
+
+#include <SensorToButton.h>  //https://github.com/nathanRamaNoodles/SensorToButton  acquired by JChristensen's popular button library
 #include <MusicWithoutDelay.h>
-#include <Tone.h>  //https://github.com/bhagman/Tone
-//char *note1 = "C Scale:d=4:c,d,e,f,g,a,b,c1";   //plays c scale,  You can add more notes to get creative. //d=4 means that every note without a number in front of the letter is assumed to be a quarter note.
-//char *note2 = ":d=4:e,f,g,a,b,c1,d1,e1";   //plays c scale starting at e
-char *note1 = "::c";   //plays c ,  You can add more notes to get creative.
-char *note2 = "::e";   //plays e
+//const char note1[] PROGMEM = "C Scale:d=4:c,d,e,f,g,a,b,c1";   //plays c scale,  You can add more notes to get creative. //d=4 means that every note without a number in front of the letter is assumed to be a quarter note.
+//const char note2[] PROGMEM = ":d=4:e,f,g,a,b,c1,d1,e1";   //plays c scale starting at e
+const char note1[] PROGMEM = {"::c"};   //plays c ,  You can add more notes to get creative.
+const char note2[] PROGMEM = {"::e"};  //plays e
+const char note3[] PROGMEM = {"::f"};  //plays f
+const char note4[] PROGMEM = {"::g"};  //plays g
 MusicWithoutDelay pianoKey(note1);
 MusicWithoutDelay pianoKey2(note2);
-Tone myTone;
-Tone myTone2;
-#define BUTTON_PIN 2       //Connect a tactile button switch (or something similar) from Arduino pin 2 to ground.
-#define BUTTON_PIN2 3       //Connect a tactile button switch (or something similar) from Arduino pin 3 to ground.
-#define PULLUP true        //To keep things simple, we use the Arduino's internal pullup resistor.
-#define INVERT true        //Since the pullup resistor will keep the pin high
+MusicWithoutDelay pianoKey3(note3);
+MusicWithoutDelay pianoKey4(note4);
+#define BUTTON_PIN 7       //Connect a tactile button switch (or something similar) from Arduino pin 2 to ground.
+#define BUTTON_PIN2 6       //Connect a tactile button switch (or something similar) from Arduino pin 3 to ground.
+#define BUTTON_PIN3 5
+#define BUTTON_PIN4 4
+
 #define DEBOUNCE_MS 70     //A debounce time of 70 milliseconds usually works well for noisy button switches. if not, try 20.
-Button firstKey(BUTTON_PIN, PULLUP, INVERT, DEBOUNCE_MS);    //Declare the button
-Button secondKey(BUTTON_PIN2, PULLUP, INVERT, DEBOUNCE_MS);
+SensorToButton firstKey(BUTTON_PIN, DEBOUNCE_MS);    //Declare the button
+SensorToButton secondKey(BUTTON_PIN2, DEBOUNCE_MS);
+SensorToButton thirdKey(BUTTON_PIN3, DEBOUNCE_MS);
+SensorToButton fourthKey(BUTTON_PIN4, DEBOUNCE_MS);
 void setup() {
   // put your setup code here, to run once:
-  myTone.begin(11);        //attach both pins to same speaker with one 1k resistor to pin 11,
-  myTone2.begin(10);       //and another 1k resistor to pin 10.
+  pianoKey.begin(CHB, TRIANGLE, ENVELOPE0, 0);
+  pianoKey2.begin(TRIANGLE, ENVELOPE0, 0);
+  pianoKey3.begin(TRIANGLE, ENVELOPE0, 0);
+  pianoKey4.begin(TRIANGLE, ENVELOPE0, 0);
 }
 
 void loop() {
   // put your main code here, to run repeatedly:
-  unsigned long cMillis = millis();
-  pianoKey.play(cMillis, myTone);
-  pianoKey2.play(cMillis, myTone2);
+  pianoKey.play();
+  pianoKey2.play();
+  pianoKey3.play();
+  pianoKey4.play();
+
   firstKey.read();
   secondKey.read();
+  thirdKey.read();
+  fourthKey.read();
+
   buttonToPiano(firstKey, pianoKey);
   buttonToPiano(secondKey, pianoKey2);
+  buttonToPiano(thirdKey, pianoKey3);
+  buttonToPiano(fourthKey, pianoKey4);
 }
 
-void buttonToPiano(Button b, MusicWithoutDelay &m) {  //Must put & before object, because we must point to the address of the Object in the Arduino Memory
+void buttonToPiano(SensorToButton b, MusicWithoutDelay &m) {  //Must put & before object, because we must point to the address of the Object in the Arduino Memory
   if (b.isPressed()) {
     if (m.isPaused())    //if note is paused, resume playing
       m.pause();

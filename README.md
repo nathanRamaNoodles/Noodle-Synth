@@ -5,10 +5,7 @@ First Download [Tone library](https://github.com/bhagman/Tone) from bhagman. My 
 ## Demonstration
 
    Check out the video below for a Legend of Zelda music demostration.  In the video, an Arduino Nano outputs two voices. The arduino uses a vibrating motor as a percussion instrument, and an RGB LED to add some fire to the show.  The delay function is not used at all :)
-   
-[Click here for Video](https://youtu.be/uoHhlrqZYDI "Demonstration Video")
 
-[Here is the link for the instructions from the video](https://create.arduino.cc/projecthub/nathan_ramanathan/music-without-delay-mp3-player-40e51b?ref=user&ref_id=185277&offset=0)
 ## Advantages
 * This Arduino Library makes an Arduino board play music in the background while running your program(Assuming your code doesn't have any delay).  
   * **So you can view the Serial Monitor, display stuff on an OLED, and read buttons while this library plays your music in the background**
@@ -32,10 +29,7 @@ First Download [Tone library](https://github.com/bhagman/Tone) from bhagman. My 
    3. Choose the "Basics" sketch.
    4. Attach a speaker with a 200 ohm resistor to pin 11, then attach the other end of the speaker to ground.
    5. Upload the code.
-   6. Type "s" in the Serial monitor(which is set to 9600 baud rate)
-      * You should get something positive in return ;)
-      * If you got something in return, it proves that my library doesn't use Delay.
-   7. The comments in the code should be helpful.  And try the other examples included with this library to learn to program without Delay.
+   6. The comments in the code should be helpful.  And try the other examples included with this library to learn to program without Delay.
    
 ![alt text](https://raw.githubusercontent.com/nathanRamaNoodles/MusicWithoutDelay-LIbrary/master/MusicWithoutDelay.png "Schematic")
 
@@ -128,7 +122,7 @@ Let's use some examples to understand the format of the song file.
    * Answer: char * name = ":b=160:c,d,e,f,g,a,b,c1";
 
 6. Question: Play some dotted quarter notes
-   * Answer: char * name = ":d=4:4.c,4.d,.e";
+   * Answer: char * name = "::4.c,8.d,2.e";
 
 7. Question: play a note every second
    * Answer: char * name = ":d=4,b=60:c,p";  //bpm=60 means a quarter note = 1 second
@@ -144,7 +138,6 @@ Let's use some examples to understand the format of the song file.
     
 
 # Functions
-```
   1. play(long cMillis, Tone tone1)// plays the song
   2. pause();           //pauses and resumes song
   3. newSong(char * p)  //used to play a new song
@@ -162,5 +155,4 @@ Let's use some examples to understand the format of the song file.
   15. isPaused()        //returns true if song is paused
   16. isNote()          //returns true if song is playing a note
   17. isBackwards()     //returns true if song is playing backwards
-  18. skipTo(long index)//skips song to time suggested(must be in milliseconds) so 3 seconds into the song would be skipTo(3*1E3)
-```
+  18. skipTo(long index)//skips song to time suggested
