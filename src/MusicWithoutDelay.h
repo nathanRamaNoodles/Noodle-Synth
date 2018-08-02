@@ -29,7 +29,7 @@ SOFTWARE.
 #define MusicWithoutDelay_h
 
 #include "Arduino.h"
-#include <synth.h> // oscillator template
+#include "synth.h" // synth engine
 static synth edgar;
 
 #define NOTE_B0  23
