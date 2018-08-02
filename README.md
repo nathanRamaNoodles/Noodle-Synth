@@ -1,9 +1,10 @@
 # MusicWithoutDelay Library(v2.0.0)
-* [Quick start here](https://github.com/nathanRamaNoodles/MusicWithoutDelay-LIbrary#quick-startfor-first-time-explorers)
+* [Quick start here](https://github.com/nathanRamaNoodles/MusicWithoutDelay-LIbrary#quick-start)
 * This library was inspired by [Bhagman's RTTL Arduino sketch](https://github.com/bhagman/Tone/blob/master/examples/RTTTL/RTTTL.pde).
 
 ## Updates
 * This library has been upgraded to version 2.0.0
+  * previous versions [found here](https://github.com/nathanRamaNoodles/MusicWithoutDelay-LIbrary/releases).
 * Improvements
   * 4-note polyphony using only one timer
   * velocity triggered notes
@@ -68,7 +69,7 @@ The Music file is stored in the `PROGMEM`.
 ![alt text](https://raw.githubusercontent.com/nathanRamaNoodles/MusicWithoutDelay-LIbrary/master/char%20song.PNG "storage Variable")
 
 ### Format(RTTL or Ring Tone Transfer Language)
-const char song[] PROGMEM =  " name of song : settings : notes";
+`const char song[] PROGMEM =  " name of song : settings : notes";`
 #### Name(Optional)
 
 * The name of the Song can be set before the first semicolon.
@@ -156,7 +157,7 @@ Assume `const char name[] PROGMEM`
    * Answer:  name = "::a+b+c,c+d+e";
 
 9. Question: Combine note with all possible options
-  * Answer:  name = "::4.a_-1";
+   * Answer:  name = "::4.a_-1";
 
 10. Question: Play notes with whitespaces(whitespaces make it easier to write music since it's easier on the eyes)
     * Answer:  name = ":: 12c , 12b , 12a , 4a , 4b , 4c , 2g , 2a , d";  //The library is user-friendly, it ignores spaces **(but don't put spaces in between the definitions of the notes)** So don't do this ":: 12 c # ,".
@@ -168,17 +169,17 @@ You can call it two ways.
 begin(int mode, int waveForm, int envelope, int mod)
 ```  
 Where **mode** is the pin connected to the speaker.  It must be `CHA` or `CHB`.  **CHA is pin 11** on UNO, and **CHB is pin 3** on UNO.  
-* CHB is more preferred
+* `CHB` is more preferred
 
 The **waveForm** can be `SINE`, `SQUARE`, `TRIANGLE`, `SAW`, `RAMP`, or `NOISE`
-* TRIANGLE is recommended
+* `TRIANGLE` is recommended
 
 The **envelope** can be `ENVELOPE0`, `ENVELOPE1`,`ENVELOPE2`, or `ENVELOPE3`.
-* Default is ENVELOPE0
+* Default is `ENVELOPE0`
 
 
 The **mod** can be any positive or negative number to create fancy musical effects.  **The further away you are from `0`, the fancier the song will sound.**
-* Default is 0.
+* Default is `0`.
 
 ```
 begin(int waveForm, int envelope, int mod)
@@ -218,7 +219,7 @@ isBackwards()     //returns true if song is playing backwards
 ```
 //Use these constants for setting wave shapes
 SINE
-SQAURE
+SQUARE
 SAW
 RAMP
 TRIANGLE
