@@ -180,6 +180,6 @@ private:
   char autoFlat[5];  //you can only have 5 of the black keys ;)
   char autoSharp[5];
   char songName[15];  //make this smaller to get more SRAM
-  char *mySong;
+  const char *mySong;
 };
 #endif
