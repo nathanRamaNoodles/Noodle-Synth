@@ -21,10 +21,16 @@ static unsigned int tim = 0;
 static unsigned char tik = 0;
 static unsigned char output_mode;
 
+#if defined(__arm__) && defined(TEENSYDUINO)
+static void timerInterrupt();
+static IntervalTimer sampleTimer;
+#endif
+
  synth::synth(){}
 void synth:: begin()
 {
   output_mode=CHA;
+#if defined(__AVR__)
   cli();
   TCCR1A = 0x00;                                  //-Start audio interrupt
   TCCR1B = 0x09;
@@ -37,6 +43,10 @@ void synth:: begin()
   TCCR2B = 0x01;                                  // |
   OCR2A = 127;                                    //-+
   SET(DDRB, 3);				    //-PWM pin
+#elif defined(__arm__) && defined(TEENSYDUINO)
+  sampleTimer.begin(timerInterrupt, 1000000.0 / FS);
+  analogWriteFrequency(3, FS);
+#endif
 }
 
 //*********************************************************************
@@ -45,6 +55,7 @@ void synth:: begin()
 
 void synth::begin(unsigned char d)
 {
+#if defined(__AVR__)
   cli();
   TCCR1A = 0x00;                                  //-Start audio interrupt
   TCCR1B = 0x09;
@@ -82,6 +93,9 @@ void synth::begin(unsigned char d)
     break;
 
   }
+#else
+  begin(); // TODO: other modes on non-AVR chips...
+#endif
 }
 
 //*********************************************************************
@@ -249,15 +263,27 @@ void synth::trigger(unsigned char voice)
 
 void synth::suspend()
 {
+#if defined(__AVR__)
   CLR(TIMSK1, OCIE1A);                            //-Stop audio interrupt
+#elif defined(__arm__) && defined(TEENSYDUINO)
+  sampleTimer.end();
+#endif
 }
 void synth::resume()
 {
+#if defined(__AVR__)
   SET(TIMSK1, OCIE1A);                            //-Start audio interrupt
+#elif defined(__arm__) && defined(TEENSYDUINO)
+  sampleTimer.begin(timerInterrupt, 1000000.0 / FS);
+#endif
 }
 
 
+#if defined(__AVR__)
 SIGNAL(TIMER1_COMPA_vect)
+#elif defined(__arm__) && defined(TEENSYDUINO)
+static void timerInterrupt()
+#endif
 {
   //-------------------------------
   // Time division
@@ -279,13 +305,18 @@ SIGNAL(TIMER1_COMPA_vect)
   //  Synthesizer/audio mixer
   //-------------------------------
 
-  OCR2A = OCR2B = 127 +
+  unsigned char sample = 127 +
     ((
   (((signed char)pgm_read_byte(wavs[0] + ((unsigned char *)&(PCW[0] += FTW[0]))[1]) * AMP[0]) >> 8) +
     (((signed char)pgm_read_byte(wavs[1] + ((unsigned char *)&(PCW[1] += FTW[1]))[1]) * AMP[1]) >> 8) +
     (((signed char)pgm_read_byte(wavs[2] + ((unsigned char *)&(PCW[2] += FTW[2]))[1]) * AMP[2]) >> 8) +
     (((signed char)pgm_read_byte(wavs[3] + ((unsigned char *)&(PCW[3] += FTW[3]))[1]) * AMP[3]) >> 8)
     ) >> 2);
+#if defined(__AVR__)
+  OCR2A = OCR2B = sample;
+#else
+  analogWrite(3, sample);
+#endif
 
   //************************************************
   //  Modulation engine
