@@ -38,7 +38,7 @@ void setup() {
 
 void loop() {
   // put your main code here, to run repeatedly:
-  buzzer.play();
+  buzzer.update();
   if (buzzer.isEnd()) {
     songToggle = !songToggle;
     if (songToggle)

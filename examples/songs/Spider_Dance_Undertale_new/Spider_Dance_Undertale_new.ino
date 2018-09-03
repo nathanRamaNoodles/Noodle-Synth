@@ -53,9 +53,9 @@ void setup() {
 
 void loop() {
   // put your main code here, to run repeatedly:
-  buzzer.play();
-  buzzer2.play();
-  buzzer3.play();
+  buzzer.update();
+  buzzer2.update();
+  buzzer3.update();
   if (millis() - motorMillis >= 50) {
     digitalWrite(motorPin, LOW);
   }
@@ -70,17 +70,17 @@ void loop() {
     int r;
     switch (str) {
       case '1':  //type '1' in Serial monitor.
-        buzzer.pause();
+        buzzer.pause(!buzzer.isPaused());
         (buzzer.isPaused()) ? count++ : count--;     //ternary operator is faster than if/else statements.
         (count == NUM) ? save = true : save = false;
         break;
       case '2':  //type '2' in Serial monitor.
-        buzzer2.pause();
+        buzzer2.pause(!buzzer2.isPaused());
         (buzzer2.isPaused()) ? count++ : count--;
         (count == NUM) ? save = true : save = false;
         break;
       case '3':  //type '3' in Serial monitor.
-        buzzer3.pause();
+        buzzer3.pause(!buzzer3.isPaused());
         (buzzer3.isPaused()) ? count++ : count--;
         (count == NUM) ? save = true : save = false;
         break;
@@ -97,21 +97,21 @@ void loop() {
 
 void proper_Restart() { //this method avoids accidental overlapping in songs with different total times
   if (buzzer.isEnd()) {
-    buzzer.pause(); //pause song
+    buzzer.pause(true); //pause song
   }
   if (buzzer2.isEnd()) {
-    buzzer2.pause();
+    buzzer2.pause(true);
   }
   if (buzzer3.isEnd()) {
-    buzzer3.pause();
+    buzzer3.pause(true);
   }
   if (buzzer.isPaused() && buzzer2.isPaused() && buzzer3.isPaused()) {
     Serial.println("Reset");
     count = 0;
     skip(0);         //skip to beginning of song(skips in milliseconds)
-    buzzer.pause();  //resume song
-    buzzer2.pause();
-    buzzer3.pause();
+    buzzer.pause(false);  //resume song
+    buzzer2.pause(false);
+    buzzer3.pause(false);
   }
 }
 
@@ -120,4 +120,3 @@ void skip(long t) {
   buzzer2.skipTo(t);
   buzzer3.skipTo(t);
 }
-

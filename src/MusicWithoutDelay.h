@@ -32,6 +32,8 @@ SOFTWARE.
 #include "synth.h" // synth engine
 static synth edgar;
 
+#define twelveRoot 1.059463094359
+
 #define NOTE_B0  23
 #define NOTE_C1  24
 #define NOTE_CS1 25
@@ -128,19 +130,27 @@ class MusicWithoutDelay
 {
 public:
   MusicWithoutDelay(const char *p);
-  void begin(int mode, int waveForm, int envelope, int mod );
-  void begin(int waveForm, int envelope, int mod);
-  void play();
-  void mute();
-  void pause();
-  void newSong(const char *p);
-  void setBPM(int tempo);
-  void setMod(int percent);
-  void setWave(int waveShape);
-  void setOctave(int oct);
-  void reverse();
-  void skipTo(long index);
+  MusicWithoutDelay();
+  MusicWithoutDelay& begin(int mode, int waveForm, int envelope, int mod );
+  MusicWithoutDelay& begin(int waveForm, int envelope, int mod);
+  MusicWithoutDelay& update();
+  MusicWithoutDelay& play();
+  MusicWithoutDelay& play(int repeat);
+  MusicWithoutDelay& mute(bool m);
+  MusicWithoutDelay& pause(bool p);
+  MusicWithoutDelay& newSong(const char *p);
+  MusicWithoutDelay& setBPM(int tempo);
+  MusicWithoutDelay& setMod(int percent);
+  MusicWithoutDelay& setVolume(int volume);
+  MusicWithoutDelay& setSustain(int v);
+  MusicWithoutDelay& setWave(int waveShape);
+  MusicWithoutDelay& setFrequency(float freq);
+  MusicWithoutDelay& setOctave(int oct);
+  MusicWithoutDelay& reverse(bool r);
+  MusicWithoutDelay& skipTo(long index);
+  MusicWithoutDelay& overrideSustain(bool v);
   // void readIt();
+  float getNoteAsFrequency(int n);
   long getTotalTime();
   long getCurrentTime();
   int getBPM();
@@ -153,6 +163,8 @@ public:
   bool isPaused();
   bool isNote();
   bool isBackwards();
+  bool isSustainOverrided();
+  bool isSingleNote();
 
 private:
   double skipSolver();
@@ -175,11 +187,12 @@ private:
   uint8_t note;
   uint8_t scale;
   uint8_t myInstrument;
+  uint8_t mRepeat;
   int skipCount;
-  bool resume, skip, single, reversed, wasPlaying, wasEnd, oneTime,delayer, rest, slur, start, finish, beat, isMute;
+  bool resume, skip, single, reversed, wasPlaying, wasEnd, oneTime,delayer, rest, slur, start, finish, beat, isMute, sustainControl, flagRepeat, playSingleNote;
   char autoFlat[5];  //you can only have 5 of the black keys ;)
   char autoSharp[5];
   char songName[15];  //make this smaller to get more SRAM
-  char *mySong;
+  const char *mySong;
 };
 #endif

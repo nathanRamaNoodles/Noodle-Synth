@@ -34,8 +34,8 @@ void setup() {
 void loop() {
   // put your main code here, to run repeatedly:
   unsigned long cMillis = millis();
-  instrument.play();
-  instrument2.play();
+  instrument.update();
+  instrument2.update();
   beginningButton.read();
   randomButton.read();
   if (beginningButton.wasPressed()) {
@@ -52,4 +52,3 @@ void loop() {
     Serial.print(F("Skipping to: ")); Serial.print(instrument.getCurrentTime() / 1E3); Serial.println(F(" seconds"));
   }
 }
-

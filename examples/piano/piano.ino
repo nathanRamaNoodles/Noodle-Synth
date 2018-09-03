@@ -49,7 +49,7 @@ MusicWithoutDelay pianoKey4(note4);
 #define BUTTON_PIN 7       //Connect a tactile button switch (or something similar) from Arduino pin 2 to ground.
 #define BUTTON_PIN2 6       //Connect a tactile button switch (or something similar) from Arduino pin 3 to ground.
 #define BUTTON_PIN3 5
-#define BUTTON_PIN4 4
+#define BUTTON_PIN4 2
 
 #define DEBOUNCE_MS 70     //A debounce time of 70 milliseconds usually works well for noisy button switches. if not, try 20.
 SensorToButton firstKey(BUTTON_PIN, DEBOUNCE_MS);    //Declare the button
@@ -62,14 +62,16 @@ void setup() {
   pianoKey2.begin(TRIANGLE, ENVELOPE0, 0);
   pianoKey3.begin(TRIANGLE, ENVELOPE0, 0);
   pianoKey4.begin(TRIANGLE, ENVELOPE0, 0);
+
+  pianoKey.pause(true); pianoKey2.pause(true); pianoKey3.pause(true); pianoKey4.pause(true);
 }
 
 void loop() {
   // put your main code here, to run repeatedly:
-  pianoKey.play();
-  pianoKey2.play();
-  pianoKey3.play();
-  pianoKey4.play();
+  pianoKey.update();
+  pianoKey2.update();
+  pianoKey3.update();
+  pianoKey4.update();
 
   firstKey.read();
   secondKey.read();
@@ -84,11 +86,6 @@ void loop() {
 
 void buttonToPiano(SensorToButton b, MusicWithoutDelay &m) {  //Must put & before object, because we must point to the address of the Object in the Arduino Memory
   if (b.isPressed()) {
-    if (m.isPaused())    //if note is paused, resume playing
-      m.pause();
-  }
-  else if (!m.isPaused()) {  //if note is playing, pause it
-    m.pause();
+    m.play(1);    //play one time
   }
 }
-

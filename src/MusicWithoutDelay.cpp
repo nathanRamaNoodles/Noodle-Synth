@@ -47,17 +47,27 @@ MusicWithoutDelay::MusicWithoutDelay(const char *p) {
     newSong(p);
   }
 }
-void MusicWithoutDelay:: begin(int mode, int waveForm, int envelope, int mod){
+MusicWithoutDelay::MusicWithoutDelay() {
+  if(globalInstrument<4){
+    myInstrument=globalInstrument;
+    globalInstrument++;
+    playSingleNote=true;
+  }
+}
+MusicWithoutDelay& MusicWithoutDelay:: begin(int mode, int waveForm, int envelope, int mod){
   if(myInstrument<1)
   edgar.begin(mode);
   edgar.setupVoice(myInstrument,waveForm,60,envelope,70,mod+64);
+  return *this;
 }
-void MusicWithoutDelay:: begin(int waveForm, int envelope, int mod){
+MusicWithoutDelay& MusicWithoutDelay:: begin(int waveForm, int envelope, int mod){
   if(myInstrument<1)
   edgar.begin();
   edgar.setupVoice(myInstrument,waveForm,60,envelope,70,mod+64);
+  return *this;
 }
-void MusicWithoutDelay:: newSong(const char *p) {
+MusicWithoutDelay& MusicWithoutDelay:: newSong(const char *p) {
+  playSingleNote=false;
   pMillis = 0;
   slurCount = 0;
   num = 0;
@@ -133,9 +143,10 @@ void MusicWithoutDelay:: newSong(const char *p) {
   loc = strlen_P(mySong);
   totalTime = 0;
   skipCount = pLoc;
-  while (skipCount < strlen_P(mySong)) {
+  while (((unsigned)skipCount) < strlen_P(mySong)) {
     totalTime += skipSolver();
   }
+  return *this;
 }
 // void MusicWithoutDelay :: readIt(){
 //   Serial.print("TotalTime: "); Serial.println(totalTime);
@@ -153,467 +164,491 @@ void MusicWithoutDelay:: newSong(const char *p) {
 //   Serial.println();
 //   Serial.print("Length: ");Serial.println(strlen_P(mySong));
 // }
-void MusicWithoutDelay:: play() {
+MusicWithoutDelay&  MusicWithoutDelay:: update() {
   //Serial.print("Delayer: ");Serial.println(delayer);
   // format: d=N,o=N,b=NNN:
   // find the start (skip name, etc)
   uint32_t cM = millis();
-  firstTime=true;
-  if (!resume) {
-    beat = false;
-    rest = false;
-    single = false;
-    if (!delayer) {
-
-      if (!reversed) {
-        //Serial.print("Play: ");Serial.println(loc);
-        // now begin note loop
-        if ((finish && !start) || start) {
-          loc = pLoc;
-          currentTime = 0;
-          start = false;
-        }
-        finish = false;
-        if (loc < strlen_P(mySong))
-        {
-          if (pgm_read_byte_near(mySong+loc) == ':')
-          loc++;
-          while (isWhitespace(pgm_read_byte_near(mySong+loc))) {
-            loc++;
-          }
-          // first, get note duration, if available
-          num = 0;
-          while (isdigit(pgm_read_byte_near(mySong+loc)))
-          {
-            num = (num * 10) + (pgm_read_byte_near(mySong+loc++) - '0');
-          }
-
-          if (!skip) {
-            if (num)duration = wholenote / num;
-            else {
-              duration = wholenote / default_dur;
-            }
-            // now, get optional '.' dotted note
-            if (pgm_read_byte_near(mySong+loc) == '.')
-            {
-              duration += duration / 2;
-              loc++;
-            }
-          }
-          else
-          skip = false;
-
-          int set = 0;
-          if(duration>=1000){
-            set=105;
-          }
-          else if(duration>=400){
-            set=87;
-          }
-          else if(duration>300){
-            set=82;
-          }
-          else if(duration>250){
-            set=78;
-          }
-          else if(duration>200){
-            set=73;
-          }
-          else{
-            set=55;
-          }
-          edgar.setLength(myInstrument,set);
-
-          // now get the note
-          note = 0;
-          for (int i = 0; i < 5; i++) {
-            if (pgm_read_byte_near(mySong+loc) == autoFlat[i]) {
-              note--;
-              break;
-            }
-            else if (pgm_read_byte_near(mySong+loc) == autoSharp[i]) {
-              note++;
-              break;
-            }
-          }
-          switch (pgm_read_byte_near(mySong+loc))
-          {
-            case 'c':
-            note += 1;
-            break;
-            case 'd':
-            note += 3;
-            break;
-            case 'e':
-            note += 5;
-            break;
-            case 'f':
-            note += 6;
-            break;
-            case 'g':
-            note += 8;
-            break;
-            case 'a':
-            note += 10;
-            break;
-            case 'b':
-            note += 12;
-            break;
-            case 'p':
-            default:
-            note = 0;
-          }
-          loc++;
-
-          // now, get optional '#' sharp
-          if (pgm_read_byte_near(mySong+loc) == '#')
-          {
-            for (int i = 0; i < 5; i++) {
-              if (pgm_read_byte_near(mySong+loc-1) == autoSharp[i]) {
-                note--;
-                break;
-              }
-            }
-            note++;
-            loc++;
-          }
-          else if (pgm_read_byte_near(mySong+loc) == '_') //for the flats
-          {
-            for (int i = 0; i < 5; i++) {
-              if (pgm_read_byte_near(mySong+loc-1) == autoFlat[i]) {
-                note++;
-                break;
-              }
-            }
-            note--;
-            loc++;
-          }
-          if (pgm_read_byte_near(mySong+loc) == '-')
-          {
-            loc++;
-            if (isDigit(pgm_read_byte_near(mySong+loc))) {
-              scale = pgm_read_byte_near(mySong+loc) - '0';
-              scale = default_oct - scale;
-              if (scale < 1)
-              scale = 1;
-              loc++;
-            }
-            else {
-              scale = default_oct;
-            }
-          }
-          // now, get scale
-          else if (isdigit(pgm_read_byte_near(mySong+loc)))
-          {
-            scale = pgm_read_byte_near(mySong+loc) - '0';
-            scale = default_oct + scale;
-            if (scale > 7)
-            scale = 7;
-            loc++;
-          }
-          else
-          {
-            scale = default_oct;
-          }
-          while (isWhitespace(pgm_read_byte_near(mySong+loc))) {
-            loc++;
-          }
-          delayer = true;
-          if (pgm_read_byte_near(mySong+loc) == ',') {
-            loc++;     // skip comma for next note (or we may be at the end)
-            if (slurCount != 0) {
-              beat = true;
-              slurCount = 0;
-            }
-            slur = false;
-          } else if (pgm_read_byte_near(mySong+loc) == '+') {
-            loc++;
-            beat = true;
-            if (slurCount == 0) {
-              beat = false;
-            }
-            slurCount++;
-            slur = true;
-          } else {
-            if (slurCount != 0) {
-              beat = true;
-            }
-          }
-          if (note) {
-            if(!isMute)
-            edgar.mTrigger(myInstrument,notes[(scale - 1) * 12 + note]);
-            beat = !beat;
-          }
-          else
-          rest = true;
-          oneMillis = cM;
-          pMillis = cM;
-          placeHolder1 = cM;
-        }
-        else {
-          delayer = false;
-          loc = pLoc;
-          beat = false;
-          if (start) {
-            start = false;
-          }
-          else
-          finish = true;
-          // myTone.stop();
+  if(playSingleNote){
+    if(!resume&&!isMute)
+    edgar.trigger(myInstrument);
+  }
+  else{
+    if(flagRepeat){
+      if(isEnd()){
+        mRepeat--;
+        play();
+        if(mRepeat<=0){
+          flagRepeat=false;
+          pause(true);
         }
       }
-      else {
-        //Serial.print("Rev: ");Serial.println(loc);
-        //Serial.print("Delayer: ");Serial.println(delayer);
+    }
 
-        // now begin note loop
-        if ((!finish && start) || finish) {
-          loc = strlen_P(mySong) - 1;
-          currentTime = totalTime;
+    firstTime=true;
+    if (!resume) {
+      beat = false;
+      rest = false;
+      single = false;
+      if (!delayer) {
+
+        if (!reversed) {
+          //Serial.print("Play: ");Serial.println(loc);
+          // now begin note loop
+          if ((finish && !start) || start) {
+            loc = pLoc;
+            currentTime = 0;
+            start = false;
+          }
           finish = false;
-        }
-        start = false;
-        if (loc > pLoc)
-        {
-          note = 0;
-          while (isWhitespace(pgm_read_byte_near(mySong+loc))) {
-            loc--;
-          }
-          // now, get scale
-          if (isdigit(pgm_read_byte_near(mySong+loc)))
+          if (loc < strlen_P(mySong))
           {
-            scale = pgm_read_byte_near(mySong+loc) - '0';
-            if (pgm_read_byte_near(mySong+loc-1) == '-') {
-              loc--;
-              scale *= -1;
-            }
-            scale = default_oct + scale;
-            if (scale > 7)
-            scale = 7;
-            else if (scale < 1)
-            scale = 1;
-            loc--;
-          }
-          else
-          {
-            scale = default_oct;
-          }
-
-
-          for (int i = 0; i < 5; i++) {
-            if (pgm_read_byte_near(mySong+loc) == autoFlat[i]) {
-              note--;
-              break;
-            }
-            else if (pgm_read_byte_near(mySong+loc) == autoSharp[i]) {
-              note++;
-              break;
-            }
-          }
-          // now, get optional '#' sharp
-          if (pgm_read_byte_near(mySong+loc) == '#')
-          {
-            for (int i = 0; i < 5; i++) {
-              if (pgm_read_byte_near(mySong+loc+1) == autoSharp[i]) {
-                note--;
-                break;
-              }
-            }
-            note++;
-            loc--;
-          }
-          else if (pgm_read_byte_near(mySong+loc) == '_')
-          {
-            for (int i = 0; i < 5; i++) {
-              if (pgm_read_byte_near(mySong+loc+1) == autoFlat[i]) {
-                note++;
-                break;
-              }
-            }
-            note--;
-            loc--;
-          }
-
-          switch (pgm_read_byte_near(mySong+loc))
-          {
-            case 'c':
-            note += 1;
-            break;
-            case 'd':
-            note += 3;
-            break;
-            case 'e':
-            note += 5;
-            break;
-            case 'f':
-            note += 6;
-            break;
-            case 'g':
-            note += 8;
-            break;
-            case 'a':
-            note += 10;
-            break;
-            case 'b':
-            note += 12;
-            break;
-            case 'p':
-            default:
-            note = 0;
-
-          }
-          loc--;
-          bool period = false;
-          // now, get optional '.' dotted note
-          if (!skip) {
-            if (pgm_read_byte_near(mySong+loc) == '.')
-            {
-              period = true;
-              loc--;
+            if (pgm_read_byte_near(mySong+loc) == ':')
+            loc++;
+            while (isWhitespace(pgm_read_byte_near(mySong+loc))) {
+              loc++;
             }
             // first, get note duration, if available
             num = 0;
-            if (isDigit(pgm_read_byte_near(mySong+loc)))
+            while (isdigit(pgm_read_byte_near(mySong+loc)))
             {
-              int i = 0;
-              while (isdigit(pgm_read_byte_near(mySong+loc)))
+              num = (num * 10) + (pgm_read_byte_near(mySong+loc++) - '0');
+            }
+
+            if (!skip) {
+              if (num)duration = wholenote / num;
+              else {
+                duration = wholenote / default_dur;
+              }
+              // now, get optional '.' dotted note
+              if (pgm_read_byte_near(mySong+loc) == '.')
               {
-                num = ((pgm_read_byte_near(mySong+loc) - '0') * powers[i]) + num ;
-                loc--;
-                i++;
+                duration += duration / 2;
+                loc++;
               }
             }
-            if (num)duration = wholenote / num;
-            else duration = wholenote / default_dur;
-            if (period)
-            duration += duration / 2;
-          }
-          else
-          skip = false;
+            else
+            skip = false;
 
-          int set = 0;
-          if(duration>=1000){
-            set=105;
-          }
-          else if(duration>=400){
-            set=87;
-          }
-          else if(duration>300){
-            set=82;
-          }
-          else if(duration>250){
-            set=78;
-          }
-          else if(duration>200){
-            set=73;
-          }
-          else{
-            set=55;
-          }
-          edgar.setLength(myInstrument,set);
-
-
-          while (isWhitespace(pgm_read_byte_near(mySong+loc))) {
-            loc--;
-          }
-          delayer = true;
-          if (pgm_read_byte_near(mySong+loc) == ',') {
-            loc--;     // skip comma for next note (or we may be at the end)
-            if (slurCount != 0) {
-              beat = true;
-              slurCount = 0;
+            int set = 0;
+            if(duration>=1000){
+              set=105;
             }
-            slur = false;
-          } else if (pgm_read_byte_near(mySong+loc) == '+') {
-            loc--;
-            beat = true;
-            if (slurCount == 0) {
-              beat = false;
+            else if(duration>=400){
+              set=87;
             }
-            slurCount++;
-            slur = true;
-          } else {
-            if (slurCount != 0) {
-              beat = true;
+            else if(duration>300){
+              set=82;
             }
-          }
-          if (note) {
-            if(!isMute)
-            edgar.mTrigger(myInstrument,notes[(scale - 1) * 12 + note]);
-            beat = !beat;
-          }
-          else
-          rest = true;
+            else if(duration>250){
+              set=78;
+            }
+            else if(duration>200){
+              set=73;
+            }
+            else{
+              set=55;
+            }
+            edgar.setLength(myInstrument,set);
 
-          pMillis = cM;
-          oneMillis = cM;
-          placeHolder1 = cM;
-        }
-        else {
-          delayer = false;
-          loc = strlen_P(mySong) - 1;
-          start = true;
-          if (finish) {
-            finish = false;
+            // now get the note
+            note = 0;
+            for (int i = 0; i < 5; i++) {
+              if (pgm_read_byte_near(mySong+loc) == autoFlat[i]) {
+                note--;
+                break;
+              }
+              else if (pgm_read_byte_near(mySong+loc) == autoSharp[i]) {
+                note++;
+                break;
+              }
+            }
+            switch (pgm_read_byte_near(mySong+loc))
+            {
+              case 'c':
+              note += 1;
+              break;
+              case 'd':
+              note += 3;
+              break;
+              case 'e':
+              note += 5;
+              break;
+              case 'f':
+              note += 6;
+              break;
+              case 'g':
+              note += 8;
+              break;
+              case 'a':
+              note += 10;
+              break;
+              case 'b':
+              note += 12;
+              break;
+              case 'p':
+              default:
+              note = 0;
+            }
             loc++;
+
+            // now, get optional '#' sharp
+            if (pgm_read_byte_near(mySong+loc) == '#')
+            {
+              for (int i = 0; i < 5; i++) {
+                if (pgm_read_byte_near(mySong+loc-1) == autoSharp[i]) {
+                  note--;
+                  break;
+                }
+              }
+              note++;
+              loc++;
+            }
+            else if (pgm_read_byte_near(mySong+loc) == '_') //for the flats
+            {
+              for (int i = 0; i < 5; i++) {
+                if (pgm_read_byte_near(mySong+loc-1) == autoFlat[i]) {
+                  note++;
+                  break;
+                }
+              }
+              note--;
+              loc++;
+            }
+            if (pgm_read_byte_near(mySong+loc) == '-')
+            {
+              loc++;
+              if (isDigit(pgm_read_byte_near(mySong+loc))) {
+                scale = pgm_read_byte_near(mySong+loc) - '0';
+                scale = default_oct - scale;
+                if (scale < 1)
+                scale = 1;
+                loc++;
+              }
+              else {
+                scale = default_oct;
+              }
+            }
+            // now, get scale
+            else if (isdigit(pgm_read_byte_near(mySong+loc)))
+            {
+              scale = pgm_read_byte_near(mySong+loc) - '0';
+              scale = default_oct + scale;
+              if (scale > 7)
+              scale = 7;
+              loc++;
+            }
+            else
+            {
+              scale = default_oct;
+            }
+            while (isWhitespace(pgm_read_byte_near(mySong+loc))) {
+              loc++;
+            }
+            delayer = true;
+            if(!sustainControl)
+            setSustain(SUSTAIN);
+            if (pgm_read_byte_near(mySong+loc) == ',') {
+              loc++;     // skip comma for next note (or we may be at the end)
+              if (slurCount != 0) {
+                beat = true;
+                slurCount = 0;
+              }
+              slur = false;
+            } else if (pgm_read_byte_near(mySong+loc) == '+') {
+              loc++;
+              beat = true;
+              if (slurCount == 0) {
+                beat = false;
+              }
+              slurCount++;
+              slur = true;
+              if(!sustainControl)
+              setSustain(NONE);
+            } else {
+              if (slurCount != 0) {
+                beat = true;
+              }
+            }
+            if (note) {
+              if(!isMute)
+              edgar.mTrigger(myInstrument,notes[(scale - 1) * 12 + note]);
+              beat = !beat;
+            }
+            else
+            rest = true;
+            oneMillis = cM;
+            pMillis = cM;
+            placeHolder1 = cM;
           }
-          // stupid minus 1 >:(, took forever to get to the problem
-          // myTone.stop();
-        }
-      }
-    }
-    else {  //when delayer is true
-      if (oneTime) {
-        duration = duration - (placeHolder2 - placeHolder1);
-        placeHolder1 = cM;
-        pMillis = cM;
-        oneMillis = cM;
-        if (wasPlaying) {
-          if(!isMute)
-          edgar.mTrigger(myInstrument,notes[(scale - 1) * 12 + note]);
-          wasPlaying = false;
-        }
-        oneTime = false;
-      }
-      if (note)
-      {
-        if (cM - pMillis >= duration) {
-          if (slur) {
+          else {
+            delayer = false;
+            loc = pLoc;
+            beat = false;
+            if (start) {
+              start = false;
+            }
+            else
+            finish = true;
             // myTone.stop();
           }
-          delayer = false;
-          pMillis = cM;
+        }
+        else {
+          //Serial.print("Rev: ");Serial.println(loc);
+          //Serial.print("Delayer: ");Serial.println(delayer);
+
+          // now begin note loop
+          if ((!finish && start) || finish) {
+            loc = strlen_P(mySong) - 1;
+            currentTime = totalTime;
+            finish = false;
+          }
+          start = false;
+          if (loc > pLoc)
+          {
+            note = 0;
+            while (isWhitespace(pgm_read_byte_near(mySong+loc))) {
+              loc--;
+            }
+            // now, get scale
+            if (isdigit(pgm_read_byte_near(mySong+loc)))
+            {
+              scale = pgm_read_byte_near(mySong+loc) - '0';
+              if (pgm_read_byte_near(mySong+loc-1) == '-') {
+                loc--;
+                scale *= -1;
+              }
+              scale = default_oct + scale;
+              if (scale > 7)
+              scale = 7;
+              else if (scale < 1)
+              scale = 1;
+              loc--;
+            }
+            else
+            {
+              scale = default_oct;
+            }
+
+
+            for (int i = 0; i < 5; i++) {
+              if (pgm_read_byte_near(mySong+loc) == autoFlat[i]) {
+                note--;
+                break;
+              }
+              else if (pgm_read_byte_near(mySong+loc) == autoSharp[i]) {
+                note++;
+                break;
+              }
+            }
+            // now, get optional '#' sharp
+            if (pgm_read_byte_near(mySong+loc) == '#')
+            {
+              for (int i = 0; i < 5; i++) {
+                if (pgm_read_byte_near(mySong+loc+1) == autoSharp[i]) {
+                  note--;
+                  break;
+                }
+              }
+              note++;
+              loc--;
+            }
+            else if (pgm_read_byte_near(mySong+loc) == '_')
+            {
+              for (int i = 0; i < 5; i++) {
+                if (pgm_read_byte_near(mySong+loc+1) == autoFlat[i]) {
+                  note++;
+                  break;
+                }
+              }
+              note--;
+              loc--;
+            }
+
+            switch (pgm_read_byte_near(mySong+loc))
+            {
+              case 'c':
+              note += 1;
+              break;
+              case 'd':
+              note += 3;
+              break;
+              case 'e':
+              note += 5;
+              break;
+              case 'f':
+              note += 6;
+              break;
+              case 'g':
+              note += 8;
+              break;
+              case 'a':
+              note += 10;
+              break;
+              case 'b':
+              note += 12;
+              break;
+              case 'p':
+              default:
+              note = 0;
+
+            }
+            loc--;
+            bool period = false;
+            // now, get optional '.' dotted note
+            if (!skip) {
+              if (pgm_read_byte_near(mySong+loc) == '.')
+              {
+                period = true;
+                loc--;
+              }
+              // first, get note duration, if available
+              num = 0;
+              if (isDigit(pgm_read_byte_near(mySong+loc)))
+              {
+                int i = 0;
+                while (isdigit(pgm_read_byte_near(mySong+loc)))
+                {
+                  num = ((pgm_read_byte_near(mySong+loc) - '0') * powers[i]) + num ;
+                  loc--;
+                  i++;
+                }
+              }
+              if (num)duration = wholenote / num;
+              else duration = wholenote / default_dur;
+              if (period)
+              duration += duration / 2;
+            }
+            else
+            skip = false;
+
+            int set = 0;
+            if(duration>=1000){
+              set=105;
+            }
+            else if(duration>=400){
+              set=87;
+            }
+            else if(duration>300){
+              set=82;
+            }
+            else if(duration>250){
+              set=78;
+            }
+            else if(duration>200){
+              set=73;
+            }
+            else{
+              set=55;
+            }
+            edgar.setLength(myInstrument,set);
+
+
+            while (isWhitespace(pgm_read_byte_near(mySong+loc))) {
+              loc--;
+            }
+            delayer = true;
+            if(!sustainControl)
+            setSustain(SUSTAIN);
+            if (pgm_read_byte_near(mySong+loc) == ',') {
+              loc--;     // skip comma for next note (or we may be at the end)
+              if (slurCount != 0) {
+                beat = true;
+                slurCount = 0;
+              }
+              slur = false;
+            } else if (pgm_read_byte_near(mySong+loc) == '+') {
+              loc--;
+              beat = true;
+              if (slurCount == 0) {
+                beat = false;
+              }
+              slurCount++;
+              slur = true;
+              if(!sustainControl)
+              setSustain(NONE);
+            } else {
+              if (slurCount != 0) {
+                beat = true;
+              }
+            }
+            if (note) {
+              if(!isMute)
+              edgar.mTrigger(myInstrument,notes[(scale - 1) * 12 + note]);
+              beat = !beat;
+            }
+            else
+            rest = true;
+
+            pMillis = cM;
+            oneMillis = cM;
+            placeHolder1 = cM;
+          }
+          else {
+            delayer = false;
+            loc = strlen_P(mySong) - 1;
+            start = true;
+            if (finish) {
+              finish = false;
+              loc++;
+            }
+            // stupid minus 1 >:(, took forever to get to the problem
+            // myTone.stop();
+          }
         }
       }
-      else
-      {
-        if (cM - pMillis >= duration) {
-          delayer = false;
+      else {  //when delayer is true
+        if (oneTime) {
+          duration = duration - (placeHolder2 - placeHolder1);
+          placeHolder1 = cM;
           pMillis = cM;
+          oneMillis = cM;
+          if (wasPlaying) {
+            if(!isMute)
+            edgar.mTrigger(myInstrument,notes[(scale - 1) * 12 + note]);
+            wasPlaying = false;
+          }
+          oneTime = false;
         }
-      }
-      if (cM - oneMillis >= 1) {
-        if (reversed)
-        currentTime--;
+        if (note)
+        {
+          if (cM - pMillis >= duration) {
+            if (slur) {
+              // myTone.stop();
+            }
+            delayer = false;
+            pMillis = cM;
+          }
+        }
         else
-        currentTime++;
-        oneMillis = cM;
+        {
+          if (cM - pMillis >= duration) {
+            delayer = false;
+            pMillis = cM;
+          }
+        }
+        if (cM - oneMillis >= 1) {
+          if (reversed)
+          currentTime--;
+          else
+          currentTime++;
+          oneMillis = cM;
+        }
+        if (currentTime > totalTime)
+        currentTime = totalTime;
       }
-      if (currentTime > totalTime)
-      currentTime = totalTime;
-      if (currentTime < 0)
-      currentTime = 0;
+    }
+    else { //when resume is true
+      if (oneTime) {
+        placeHolder2 = cM;
+        if (note)
+        wasPlaying = true;
+        // myTone.stop();
+        oneTime = false;
+      }
     }
   }
-  else { //when resume is true
-    if (oneTime) {
-      placeHolder2 = cM;
-      if (note)
-      wasPlaying = true;
-      // myTone.stop();
-      oneTime = false;
-    }
-  }
+  return *this;
 }
 char* MusicWithoutDelay:: getName() {
   return songName;
@@ -630,17 +665,17 @@ int MusicWithoutDelay :: getBPM() {
 int MusicWithoutDelay :: getOctave() {
   return default_oct;
 }
-void MusicWithoutDelay :: setBPM(int tempo) {
+MusicWithoutDelay& MusicWithoutDelay :: setBPM(int tempo) {
   bpm = tempo;
-  if (bpm < 0)
-  bpm = 0;
   wholenote = (60 * 1000L / bpm) * 4;
+  return *this;
 }
-void MusicWithoutDelay :: setOctave(int oct) {
+MusicWithoutDelay& MusicWithoutDelay :: setOctave(int oct) {
   if (oct >= 1 && oct <= 7) default_oct = oct;
+  return *this;
 }
-void MusicWithoutDelay :: pause() {
-  resume = !resume;
+MusicWithoutDelay& MusicWithoutDelay :: pause(bool p) {
+  resume = p;
   if (start||finish||skip) {
     placeHolder2 = millis();
     if(!skip)
@@ -650,6 +685,7 @@ void MusicWithoutDelay :: pause() {
   }
 
   oneTime = true;
+  return *this;
 }
 double MusicWithoutDelay :: skipSolver() {
   num = 0;
@@ -693,12 +729,12 @@ double MusicWithoutDelay :: skipSolver() {
   //Serial.println();
   return dur;
 }
-void MusicWithoutDelay :: skipTo(long index) {
+MusicWithoutDelay& MusicWithoutDelay :: skipTo(long index) {
   timeBar = 0;
   int n = 0;
   skipCount = pLoc;
-  while (skipCount < strlen_P(mySong)) {
-    if (timeBar < index) {
+  while (((unsigned)skipCount) < strlen_P(mySong)) {
+    if (((unsigned)timeBar) < index) {
       n = skipCount;
       timeBar += skipSolver();  //adds time
     }
@@ -710,7 +746,7 @@ void MusicWithoutDelay :: skipTo(long index) {
       break;
     }
   }
-  if (index >= totalTime || index <= 0) {
+  if (index >= ((unsigned)totalTime) || index <= 0) {
     n = 0;
     if (start) {
       start = false;
@@ -732,6 +768,7 @@ void MusicWithoutDelay :: skipTo(long index) {
   else   duration = timeBar-index;
   currentTime = index;
   delayer = false;
+  return *this;
 }
 bool MusicWithoutDelay :: isStart() {
   if (start && !resume) {
@@ -748,30 +785,19 @@ bool MusicWithoutDelay :: isEnd() {
   return false;
 }
 bool MusicWithoutDelay :: isPaused() {
-  if (!resume) {
-    return false;
-  }
-  else
-  return true;
+  return resume;
 }
 bool MusicWithoutDelay :: isRest() {
-  if (rest) {
-    return true;
-  }
-  else {
-    return false;
-  }
+  return rest;
 }
 bool MusicWithoutDelay :: isNote() {
-  if (beat) {
-    return true;
-  }
-  else {
-    return false;
-  }
+  return beat;
 }
-void MusicWithoutDelay :: reverse() {
-  reversed = !reversed;
+bool MusicWithoutDelay :: isSingleNote(){
+  return playSingleNote;
+}
+MusicWithoutDelay& MusicWithoutDelay :: reverse(bool r) {
+  reversed = r;
   if(firstTime){
     pMillis=millis();
     if (!start && !finish){
@@ -781,23 +807,57 @@ void MusicWithoutDelay :: reverse() {
     skipTo(0);
     delayer = false;
   }
+  return *this;
 }
-void MusicWithoutDelay:: mute(){
-  isMute=!isMute;
+MusicWithoutDelay& MusicWithoutDelay:: mute(bool m){
+  isMute=m;
+  return *this;
 }
-void  MusicWithoutDelay::setWave( int waveShape){
+MusicWithoutDelay& MusicWithoutDelay::play(){
+  skipTo(0);
+  pause(false);
+  return *this;
+}
+MusicWithoutDelay& MusicWithoutDelay::play(int i){
+  play();
+  flagRepeat=true;
+  mRepeat = (i<1)?2:i+1;
+  return *this;
+}
+float MusicWithoutDelay::getNoteAsFrequency(int n){
+  return 440 * pow(twelveRoot, (n - 69));
+}
+MusicWithoutDelay& MusicWithoutDelay::setWave( int waveShape){
   edgar.setWave( myInstrument,waveShape);
+  return *this;
 }
-void MusicWithoutDelay::setMod( int percent){
-
+MusicWithoutDelay& MusicWithoutDelay::setSustain(int v){
+  edgar.setSustain(myInstrument, v);
+  return *this;
+}
+MusicWithoutDelay& MusicWithoutDelay::overrideSustain(bool v){
+  sustainControl = v;
+  return *this;
+}
+bool MusicWithoutDelay::isSustainOverrided(){
+  return sustainControl;
+}
+MusicWithoutDelay& MusicWithoutDelay::setMod( int percent){
   edgar.setMod(myInstrument,percent+64);
+  return *this;
+}
+MusicWithoutDelay& MusicWithoutDelay::setFrequency(float freq){
+  playSingleNote=true;
+  edgar.setFrequency(myInstrument,freq);
+  return *this;
+}
+MusicWithoutDelay& MusicWithoutDelay::setVolume(int volume){
+  edgar.setVolume(myInstrument,volume);
+  return *this;
 }
 bool MusicWithoutDelay::isMuted(){
   return isMute;
 }
 bool MusicWithoutDelay :: isBackwards() {
-  if (reversed)
-  return true;
-  else
-  return false;
+  return reversed;
 }

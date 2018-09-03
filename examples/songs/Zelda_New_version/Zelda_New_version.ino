@@ -37,14 +37,15 @@ void setup() {
   pinMode(motorPin, OUTPUT);
   pinMode(potPin, INPUT);
   unsigned long totalTime = buzzer.getTotalTime();
+  Serial.println(F("Type 'm' to modulate,\n's' to randomly skip within song,\n'p' to pause/play\n'b' to play in reverse/forwards"));
   Serial.print("TotalTime: "); Serial.print(totalTime / 1E3); Serial.println(" seconds!");
 }
 int r, j;
 void loop() {
   // put your main code here, to run repeatedly:
-  buzzer.play();
-  buzzer2.play();
-//  int val = map(analogRead(potPin), 0, 1023, -50, 50);
+  buzzer.update();
+  buzzer2.update();
+  //  int val = map(analogRead(potPin), 0, 1023, -50, 50);
   //  buzzer.setMod(val);
   //  buzzer2.setMod(val);
   if (millis() - motorMillis >= 50) {
@@ -89,10 +90,10 @@ void loop() {
 }
 
 void Pause() {
-  buzzer.pause();
-  buzzer2.pause();
+  buzzer.pause(!buzzer.isPaused());
+  buzzer2.pause(!buzzer2.isPaused());
 }
 void backwards() {
-  buzzer.reverse();
-  buzzer2.reverse();
+  buzzer.reverse(!buzzer.isBackwards());
+  buzzer2.reverse(!buzzer2.isBackwards());
 }

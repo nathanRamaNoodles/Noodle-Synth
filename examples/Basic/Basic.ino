@@ -46,16 +46,17 @@ void setup() {                               //For details on the RTTL format, l
   instrument4.begin(TRIANGLE, ENVELOPE0, 0);
   Serial.begin(9600);
   unsigned long t = instrument.getTotalTime();  //spits out total time in milliseconds
+  Serial.println(F("Type '1','2','3', or '4' to mute the corresponding instrument."));
 
   Serial.print("Total Time: "); Serial.println(t / 1E3);
 }
 
 void loop() {
   // put your main code here, to run repeatedly:
-  instrument.play();  //but its important to recognize that this library depends
-  instrument2.play();
-  instrument3.play();
-  instrument4.play();
+  instrument.update();  //but its important to recognize that this library depends
+  instrument2.update();
+  instrument3.update();
+  instrument4.update();
   if (instrument.isEnd()) {          //on your main code not having delay().  Also, it increases stability, so your welcome :D
     //    instrument.pause();     //pauses song
     //    instrument2.pause();
@@ -70,16 +71,16 @@ void loop() {
         Serial.println("What's it to ya?  I don't use delay, and you shouldn't either.\n Star this project on Github, and spread this good news to others.");
         break;
       case '1':  //type 's' in Serial monitor.
-        instrument.mute();
+        instrument.mute(!instrument.isMuted());
         break;
       case '2':  //type 's' in Serial monitor.
-        instrument2.mute();
+        instrument2.mute(!instrument2.isMuted());
         break;
       case '3':  //type 's' in Serial monitor.
-        instrument3.mute();
+        instrument3.mute(!instrument3.isMuted());
         break;
       case '4':  //type 's' in Serial monitor.
-        instrument4.mute();
+        instrument4.mute(!instrument4.isMuted());
         break;
     }
   }

@@ -61,8 +61,8 @@ void setup() {
 unsigned long oledMillis = 0;
 void loop() {
   // put your main code here, to run repeatedly:
-  buzzer.play();
-  buzzer2.play();
+  buzzer.update();
+  buzzer2.update();
   if (millis() - oledMillis >= 250) {
     display.clearDisplay();
     display.setTextSize(3);

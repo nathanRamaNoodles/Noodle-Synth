@@ -16,6 +16,10 @@
 #define CHA 2
 #define CHB 3
 
+#define SUSTAIN 1
+#define REV_SUSTAIN 2
+#define NONE 0
+
 #define SINE     0
 #define TRIANGLE 1
 #define SQUARE   2
@@ -40,20 +44,17 @@ class synth
     synth();
     void begin();
     void begin(unsigned char d);
-    unsigned char synthTick(void);
-    unsigned char voiceFree(unsigned char voice);
     void setupVoice(unsigned char voice, unsigned char wave, unsigned char pitch, unsigned char env, unsigned char length, unsigned int mod);
     void setWave(unsigned char voice, unsigned char wave);
     void setPitch(unsigned char voice,unsigned char MIDInote);
     void setEnvelope(unsigned char voice, unsigned char env);
     void setLength(unsigned char voice,unsigned char length);
     void setMod(unsigned char voice,unsigned char mod);
-    void mTrigger(unsigned char voice,unsigned char MIDInote);
+    void setVolume(unsigned char voice, int v);
     void setFrequency(unsigned char voice,float f);
-    void setTime(unsigned char voice,float t);
+    void mTrigger(unsigned char voice,unsigned char MIDInote);
     void trigger(unsigned char voice);
-    void suspend();
-    void resume();
+    void setSustain(unsigned char voice, int v);
 private:
   //nothing :D
 };

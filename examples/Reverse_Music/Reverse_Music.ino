@@ -59,7 +59,11 @@ void setup()
   pinMode(motor, OUTPUT);  //percussion instrument
   buzzer.begin(CHB, TRIANGLE, ENVELOPE0, 0);
   buzzer2.begin(TRIANGLE, ENVELOPE0, 0);
-  buzzer2.reverse();  //plays the song backwards(since it was already backwards to begin with, this function reassures you that the song will sound as if it was playing forwards)
+
+  buzzer.overrideSustain(true); //let's override sustain and make some cool effects :)
+  buzzer2.overrideSustain(true);
+
+  buzzer2.reverse(!buzzer2.isBackwards());  //plays the song backwards(since it was already backwards to begin with, this function reassures you that the song will sound as if it was playing forwards)
   //if you comment this out, the speaker will play the song in reverse and forwards...AT the SAME TIME!!! >:)  (it sounds bad)
 }
 void loop()
@@ -67,8 +71,8 @@ void loop()
   unsigned long cMillis = millis();
   pauseButton.read();
   reverseButton.read();
-  buzzer.play();
-  buzzer2.play();
+  buzzer.update();
+  buzzer2.update();
   if (Serial.available()) {
     char str = Serial.read();
     switch (str) {
@@ -105,10 +109,20 @@ void loop()
   }
 }
 void Pause() {
-  buzzer.pause();
-  buzzer2.pause();
+  buzzer.pause(!buzzer.isPaused());
+  buzzer2.pause(!buzzer2.isPaused());
+}
+void set_Sustain(int m) {
+  buzzer.setSustain(m);
+  buzzer2.setSustain(m);
 }
 void backwards() {
-  buzzer.reverse();
-  buzzer2.reverse();
+  buzzer.reverse(!buzzer.isBackwards());
+  buzzer2.reverse(!buzzer2.isBackwards());
+  if (buzzer.isBackwards()) {
+    set_Sustain(REV_SUSTAIN);
+  }
+  else {
+    set_Sustain(SUSTAIN);
+  }
 }

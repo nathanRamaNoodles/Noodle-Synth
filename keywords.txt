@@ -12,6 +12,7 @@ MusicWithoutDelay	KEYWORD1
 # Methods and Functions (KEYWORD2)
 #######################################
 
+update	KEYWORD2
 play	KEYWORD2
 mute	KEYWORD2
 isMuted	KEYWORD2
@@ -20,9 +21,15 @@ newSong	KEYWORD2
 setBPM	KEYWORD2
 setWave	KEYWORD2
 setMod	KEYWORD2
+setFrequency	KEYWORD2
 setOctave	KEYWORD2
+setSustain	KEYWORD2
+setVolume	KEYWORD2
+overrideSustain	KEYWORD2
+isSustainOverrided	KEYWORD2
 reverse	KEYWORD2
 skipTo	KEYWORD2
+getNoteAsFrequency	KEYWORD2
 getTotalTime	KEYWORD2
 getCurrentTime	KEYWORD2
 getBPM	KEYWORD2
@@ -34,6 +41,7 @@ isEnd	KEYWORD2
 isPaused	KEYWORD2
 isNote	KEYWORD2
 isBackwards	KEYWORD2
+isSingleNote	KEYWORD2
 #######################################
 # Constants (LITERAL1)
 
@@ -136,6 +144,11 @@ TRIANGLE	LITERAL1
 
 CHB	LITERAL1
 CHA	LITERAL1
+DIFF	LITERAL1
+
+SUSTAIN	LITERAL1
+REV_SUSTAIN	LITERAL1
+NONE	LITERAL1
 
 ENVELOPE0	LITERAL1
 ENVELOPE1	LITERAL1
