@@ -20,6 +20,7 @@ static unsigned int volume[4] = {20, 20, 20, 20};//volume variables
 #if defined(__arm__) && defined(TEENSYDUINO)
 static void timerInterrupt();
 static IntervalTimer sampleTimer;
+static uint8_t globalPWM=3; // default to PIN 3
 #endif
 
 synth::synth(){}
@@ -41,7 +42,7 @@ void synth:: begin()
   SET(DDRB, 3);				    //-PWM pin
   #elif defined(__arm__) && defined(TEENSYDUINO)
   sampleTimer.begin(timerInterrupt, 1000000.0 / FS);
-  analogWriteFrequency(3, FS);
+  analogWriteFrequency(globalPWM, FS);
   #endif
 }
 
@@ -90,6 +91,7 @@ void synth::begin(unsigned char d)
 
   }
   #else
+  globalPWM=(uint8_t)d;
   begin(); // TODO: other modes on non-AVR chips...
   #endif
 }
@@ -284,7 +286,7 @@ static void timerInterrupt()
   #if defined(__AVR__)
   OCR2A = OCR2B = sample;
   #else
-  analogWrite(3, sample);
+  analogWrite(globalPWM, sample);
   #endif
   //************************************************
   //  Modulation engine
