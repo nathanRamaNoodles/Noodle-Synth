@@ -8,7 +8,7 @@ An Arduino Library to play infinite polyphonic notes with full control over volu
 
 - [MusicWithoutDelay Library](#musicwithoutdelay-libraryv350)
 	- [Compatibility](#compatibility)
-      - [Change Teensy pins](#new-you-can-change-the-teensy's-output-pin-3rd-generation-only)
+      - [Change Teensy pins](#new-you-can-change-the-teensys-output-pin-3rd-generation-only)
 	- [How to Change Polyphony](#how-to-change-polyphony)
 	- [Updates](#updates)
 	- [Demonstration](#demonstration)
