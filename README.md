@@ -32,6 +32,7 @@ An Arduino Library to play infinite polyphonic notes with full control over volu
 	  - [How to Override Instruments:](#how-to-override-instruments)
 	  - [Change Sustain type](#change-sustain-type)
   - [**(New)** Stereo Support](#new-stereo-support)
+	  - [Teensy's Multi-Stereo](#teensys-multi-stereo)
 - [Functions](#functions)
 - [Constants](#constants)
 <!-- /TOC -->
@@ -45,7 +46,7 @@ This library should work for the following boards:
 | Arduino Uno, Nano, Pro Mini (boards with atmega328p)  | 8 | 11 | 3 |yes|
 | Arduino Micro, Pro Micro (boards with atmega32u4)     | 8 | 6 | N/A |no|
 | Arduino MEGA-2560                                     |~16 | 10| 9 |yes|
-| Teensy 2.0                                            | 8 | 6 | N/A |no|
+| Teensy 2.0                                            | 8 | A9 | N/A |no|
 | Teensy LC, 3.0+ (the Teensy 3rd generation)           | 30* | 3 | 4| YES!!! (you can output on more than 2 pins)|
 | ESP8266 (under construction)                          | ~8 | RX line(uses i2s) | N/A | No!!! 😡|
 
@@ -108,10 +109,13 @@ This library should work for the following boards:
 * Very unstable on ESP8266. 😡
 
 ## Quick Start
+In this example, we will use an Arduino Uno.
+
 1. Install this library by downloading the zip folder.  Read [this Arduino Library Tutorial](https://www.arduino.cc/en/Guide/Libraries) to install the library.
 2. Open the examples folder after installing the library.  
 3. Choose the "Basics" sketch.
 4. Attach a speaker as per the schematic below.
+	* **Note: Your pin will be different depending on the [compatibility table](https://github.com/nathanRamaNoodles/MusicWithoutDelay-LIbrary#compatibility)**
 5. Upload the code.
 6. The comments in the code should be helpful.  And try the other examples included with this library.
 
@@ -275,7 +279,7 @@ float freq = buzzer.getNoteAsFrequency(int Note);
 ```
 Where `Note` can be referenced by simply typing `NOTE_A4` for A4, or `NOTE_C4` for middle C.
 
-# ✨**(New)** Volume Control
+# ✨(New) Volume Control
 
 It's been forever, but I finally mastered the art of Timers, and with it I figured out how to control Volume.
 
@@ -285,7 +289,7 @@ buzzer.setVolume(50);// 0-127
 ```
 The **min volume is 0** and the **max is 127**.
 
-# ✨**(New)** Sustain Override
+# ✨(New) Sustain Override
 So, you know how a piano's volume decreases overtime as soon as you play a note?  Well, I've applied the same principle to my library. As a bonus, I've also figured out how to make music sound like it's being played backwards!
 
 As you know, your RTTL files contains commas `,` and plus `+` signs to seperate notes from each other; my library automatically adds sustain and removes it as your song plays.  **However, if you want the whole song to sound "backwards", you must Override the instrument!**
@@ -302,7 +306,7 @@ buzzer.setSustain(SUSTAIN);     // Normal sustain
 buzzer.setSustain(REV_SUSTAIN); // Backwards effect
 ```
 
-# ✨**(New)** Stereo Support
+# ✨(New) Stereo Support
 For the boards that have stereo support, all you have to do to set the instruments to different pins.  For instance, this will allow sound to come at two pins:
 
 ```
@@ -319,9 +323,22 @@ buzzer3.begin(CHB,SINE,ENVELOPE0,0);
 buzzer4.begin(CHB,SINE,ENVELOPE0,0);
 ```
 
+## Teensy's Multi-Stereo
+The Teensy(3rd generation) is really powerful; you can output on any PWM pin with **barely** any limitations.
+
+For instance:
+```
+buzzer.begin(CHA,SINE,ENVELOPE0,0);   //CHA is also pin 3
+buzzer2.begin(CHB,SINE,ENVELOPE0,0);  //CHB is pin 4
+buzzer3.begin(6,SINE,ENVELOPE0,0);    //pin 6
+buzzer4.begin(A9,SINE,ENVELOPE0,0);   //pin A9
+buzzer5.begin(6,SINE,ENVELOPE0,0);    //pin 6...again :D
+etc...
+```
+
 # Functions
 ```
-begin(int mode, int waveForm, int envelope, int mod)//mode can be CHA or CHB  
+begin(int pin, int waveForm, int envelope, int mod)//mode can be CHA or CHB  
 begin(int waveForm, int envelope, int mod)
 --------------------------------------------------------
 update()          //update the instruments
@@ -382,5 +399,5 @@ ENVELOPE3
 //Use these constants for setting the type of sustain for the instrument.
 SUSTAIN     // Default, like how a piano plays
 REV_SUSTAIN // Sounds like music is played backwards
-NONE        // Boring, and classic Arduino monotone slur.
+NONE        // Boring, and classic Arduino monotone.
 ```
