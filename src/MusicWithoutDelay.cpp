@@ -41,28 +41,28 @@ MusicWithoutDelay::MusicWithoutDelay(const char *p) {
   default_oct = 4;
   bpm = 100;
   wholenote = (60 * 1000L / bpm) * 4;
-  if(globalInstrument<4){
-    myInstrument=globalInstrument;
-    globalInstrument++;
-    newSong(p);
-  }
+  myInstrument=globalInstrument;
+  globalInstrument++;
+  edgar.setNumVoices(globalInstrument);
+  newSong(p);
 }
 MusicWithoutDelay::MusicWithoutDelay() {
-  if(globalInstrument<4){
-    myInstrument=globalInstrument;
-    globalInstrument++;
-    playSingleNote=true;
-  }
+  myInstrument=globalInstrument;
+  globalInstrument++;
+  edgar.setNumVoices(globalInstrument);
+  playSingleNote=true;
 }
 MusicWithoutDelay& MusicWithoutDelay:: begin(int mode, int waveForm, int envelope, int mod){
-  if(myInstrument<1)
-  edgar.begin(mode);
+
+  edgar.begin(myInstrument, mode);
   edgar.setupVoice(myInstrument,waveForm,60,envelope,70,mod+64);
   return *this;
 }
 MusicWithoutDelay& MusicWithoutDelay:: begin(int waveForm, int envelope, int mod){
   if(myInstrument<1)
-  edgar.begin();
+  edgar.begin(myInstrument, CHA); //default channel
+  else
+  edgar.begin(myInstrument);
   edgar.setupVoice(myInstrument,waveForm,60,envelope,70,mod+64);
   return *this;
 }
@@ -291,7 +291,13 @@ MusicWithoutDelay&  MusicWithoutDelay:: update() {
               note = 0;
             }
             loc++;
-
+            if (!skip) {
+              if (pgm_read_byte_near(mySong+loc) == '.')
+              {
+                duration += duration / 2;
+                loc++;
+              }
+            }
             // now, get optional '#' sharp
             if (pgm_read_byte_near(mySong+loc) == '#')
             {
@@ -734,7 +740,7 @@ MusicWithoutDelay& MusicWithoutDelay :: skipTo(long index) {
   int n = 0;
   skipCount = pLoc;
   while (((unsigned)skipCount) < strlen_P(mySong)) {
-    if (((unsigned)timeBar) < index) {
+    if (timeBar < ((unsigned)index)) {
       n = skipCount;
       timeBar += skipSolver();  //adds time
     }
@@ -746,7 +752,7 @@ MusicWithoutDelay& MusicWithoutDelay :: skipTo(long index) {
       break;
     }
   }
-  if (index >= ((unsigned)totalTime) || index <= 0) {
+  if (((unsigned)index) >= totalTime || index <= 0) {
     n = 0;
     if (start) {
       start = false;
@@ -825,7 +831,7 @@ MusicWithoutDelay& MusicWithoutDelay::play(int i){
   return *this;
 }
 float MusicWithoutDelay::getNoteAsFrequency(int n){
-  return 440 * pow(twelveRoot, (n - 69));
+    return 440 * pow(twelveRoot, (n - 69));
 }
 MusicWithoutDelay& MusicWithoutDelay::setWave( int waveShape){
   edgar.setWave( myInstrument,waveShape);

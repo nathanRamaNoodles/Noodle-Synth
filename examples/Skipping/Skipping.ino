@@ -9,7 +9,7 @@
    This is by far the most complex, beautiful, mathematical function I have created.  :')
    Use skipTo(long) wisely
 */
-//To learn more about this project go to https://github.com/nathanRamaNoodles/MusicWithoutDelay
+//To learn more about this project go to https://github.com/nathanRamaNoodles/MusicWithoutDelay-LIbrary
 #include <MusicWithoutDelay.h>
 #include <SensorToButton.h>  //https://github.com/nathanRamaNoodles/SensorToButton  acquired by JChristensen's popular button library
 const char Soprano[] PROGMEM = "Zelda:o=5,b=160,f=aeb:4b,4f+8.f,16b,16b,16c1,16d1,16e1,2f1,8p,8f1,12f1,12g_1,12a1,2b1,12p,12b1,12b1,12b1,12a1,12g_1,8.a1,16g_1,2f1,4f1,8e1,16e1,16f1,2g_1,8f1,8e1,8d_1,16d_1,16e1,2f1,8e1,8d_1,8c1,16c1,16d1,2e#1,4g1,8f1,16f,16f,8f,16f,16f,8f,16f,16f,8f,8f";

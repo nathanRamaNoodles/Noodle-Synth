@@ -23,7 +23,7 @@
   SOFTWARE.
 */
 
-#include <MusicWithoutDelay.h>
+#include <MusicWithoutDelay.h> //https://github.com/nathanRamaNoodles/MusicWithoutDelay-LIbrary
 const char song[] PROGMEM = {"Spider Dance:b=115,d=16,f=abde,o=5:8f1,8c1,8a,8f,  p,c_1,8b,  b,a,e,f, p,c1,b,a,  b,c1,e,f,a,f,e,  f1,f1,e1,32c1,32b,a,  4f,4g,4a,4b,  8c1,8b,8f1,8c1,  8e#1,8d1,4c1"};
 const char song2[] PROGMEM = {"Spider Dance:b=115,d=16,f=abde,o=5:8c1,8a,8f,8g,  p,a,8f,  g,f_,b,d,  p,a,f,e,  g,a,g-1,a-1,c,a-1,g-1,  a,a,8p,16p,   8p,8b-1,8p,8b-1,8p,8b-1,8p,8a-1,  8a,8d,8c1,8f,  8b,8a,4g"};
 const char song3[] PROGMEM = {"Spider Dance:b=115,d=16,f=abde,o=3:f,c1,b,c1,f,c1,b,c1,d,c_1,b,c_1,c,c1,g,b,  f,c1,b,c1,  g,c1,b,c1,  a,c1,b,c1,  b,d1,c1,d1,   d,a,g,a, d,b,a,b,  d,c1,b,c1,  d,d1,c1,d1, 4c, 8p,8c,4c,  c1,d#1,e#1"};

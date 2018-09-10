@@ -1,4 +1,4 @@
-//demonstrates the Volume feature to this library
+//demonstrates the Volume feature to this library (volume from 0-127)
 /*
   MIT License
 
@@ -22,7 +22,7 @@
   OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
   SOFTWARE.
 */
-#include <MusicWithoutDelay.h>
+#include <MusicWithoutDelay.h> //https://github.com/nathanRamaNoodles/MusicWithoutDelay-LIbrary
 const char song[] PROGMEM = {":d=32:c,d,e,f,g,a,b,c1,d1,e1,f1,g1,a1,b1,c2,d2,e2,f2,g2,a2,b2,c3,d3,e3,f3,g3,a3,b3,c4"};
 MusicWithoutDelay buzzer(song);
 long totalTime;
@@ -33,13 +33,13 @@ void setup() {
 
   buzzer.overrideSustain(true);
   buzzer.setSustain(NONE); // similar to using "+" signs instead of "," commas in song[] array.
-  
+
   totalTime = buzzer.getTotalTime();
 }
 void loop() {
   // put your main code here, to run repeatedly:
   buzzer.update();
   long currentTime = buzzer.getCurrentTime();
-  int mVolume = map(currentTime, 0, totalTime, 50, 100); // minVolume, maxVolume
+  int mVolume = map(currentTime, 0, totalTime, 50, 127); // minVolume, maxVolume
   buzzer.setVolume(mVolume);
 }

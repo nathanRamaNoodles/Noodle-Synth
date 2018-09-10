@@ -35,7 +35,7 @@
   OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
   SOFTWARE.
 */
-//To learn more about this project go to https://github.com/nathanRamaNoodles/MusicWithoutDelay
+//To learn more about this project go to https://github.com/nathanRamaNoodles/MusicWithoutDelay-LIbrary
 
 #include <SensorToButton.h>  //https://github.com/nathanRamaNoodles/SensorToButton
 #include <MusicWithoutDelay.h>

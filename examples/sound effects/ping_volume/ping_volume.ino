@@ -24,7 +24,7 @@
 */
 #define potPin A0
 
-#include <MusicWithoutDelay.h>
+#include <MusicWithoutDelay.h> // https://github.com/nathanRamaNoodles/MusicWithoutDelay-LIbrary
 #include <NewPing.h>  //https://playground.arduino.cc/Code/NewPing
 #define TRIGGER_PIN  12  // Arduino pin tied to trigger pin on the ultrasonic sensor.
 #define ECHO_PIN     11  // Arduino pin tied to echo pin on the ultrasonic sensor.

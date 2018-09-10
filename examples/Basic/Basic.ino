@@ -28,7 +28,7 @@
   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
   OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
   SOFTWARE.*/
-//To learn more about this project go to https://github.com/nathanRamaNoodles/MusicWithoutDelay
+//To learn more about this project go to https://github.com/nathanRamaNoodles/MusicWithoutDelay-LIbrary
 #include <MusicWithoutDelay.h>
 const char song[] PROGMEM = "::e,8f,8g,8a,8b,8c1,8d1,8e1";  //the C major scale. This format is known as RingTone Transfer Language or RTTL(It was used by Nokia's phone company).
 const char song2[] PROGMEM = ":d=4:c,d,e,f";
@@ -38,7 +38,7 @@ MusicWithoutDelay instrument(song);          //d=4 means that every note without
 MusicWithoutDelay instrument2(song2);
 MusicWithoutDelay instrument3(song3);
 MusicWithoutDelay instrument4(song4);
-void setup() {                               //For details on the RTTL format, look at https://github.com/nathanRamaNoodles/MusicWithoutDelay documentation
+void setup() {                               //For details on the RTTL format, look at https://github.com/nathanRamaNoodles/MusicWithoutDelay-LIbrary documentation
   // put your setup code here, to run once:
   instrument.begin(CHB, TRIANGLE, ENVELOPE0, 0);
   instrument2.begin(TRIANGLE, ENVELOPE0, 0);

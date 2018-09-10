@@ -1,28 +1,78 @@
-# MusicWithoutDelay Library(v3.0.0)
+# MusicWithoutDelay Library(v3.5.0)
+An Arduino Library to play infinite polyphonic notes with full control over volume, pitch, and . . . music :D
 * [Quick start here](https://github.com/nathanRamaNoodles/MusicWithoutDelay-LIbrary#quick-start)
 * This library was inspired by [Bhagman's RTTL Arduino sketch](https://github.com/bhagman/Tone/blob/master/examples/RTTTL/RTTTL.pde) and [Dzlonline's synth engine](https://github.com/dzlonline/the_synth)
 
-## Compatibilty
-This library should work for the following boards:
+## Table of Contents
+<!-- TOC depthFrom:1 depthTo:6 withLinks:1 updateOnSave:undefined orderedList:0 -->
 
-* Arduino Uno
-* Nano
-* ~~Mega2560~~(broken since 2011)
-* Pro Mini
-* All Teensy boards
+- [MusicWithoutDelay Library](#musicwithoutdelay-libraryv350)
+	- [Compatibility](#compatibility)
+      - [Change Teensy pins](#new-you-can-change-the-teensy's-output-pin-3rd-generation-only)
+	- [How to Change Polyphony](#how-to-change-polyphony)
+	- [Updates](#updates)
+	- [Demonstration](#demonstration)
+	- [Advantages](#advantages)
+	- [Disadvantages(Soon to be fixed)](#disadvantagessoon-to-be-fixed)
+	- [Quick Start](#quick-start)
+- How To's
+  - [How to write Music](#how-to-write-music)
+	 - [The Arduino Code](#the-arduino-code)
+		 - [Format(RTTL or Ring Tone Transfer Language)](#formatrttl-or-ring-tone-transfer-language)
+			- [Name(Optional)](#nameoptional)
+			- [The Settings(Optional)](#the-settingsoptional)
+			- [Notes(Required)](#notesrequired)
+  - [Examples](#examples)
+  - [Creating a MusicWithoutDelay Object](#creating-a-musicwithoutdelay-object)
+  - [Starting the speaker](#starting-the-speaker)
+- Features
+  - [✨Simple Continuous Frequency](#simple-continuous-frequency)
+  - [**(New)** Volume Control](#new-volume-control)
+  - [**(New)** Sustain Override](#new-sustain-override)
+	  - [How to Override Instruments:](#how-to-override-instruments)
+	  - [Change Sustain type](#change-sustain-type)
+  - [**(New)** Stereo Support](#new-stereo-support)
+- [Functions](#functions)
+- [Constants](#constants)
+<!-- /TOC -->
+
+## Compatibility
+This library should work for the following boards:
+* **Please note that polyphony depends on your microcontroller's processor speed.**
+
+| Board  |                          Max Polyphony | Pin(CHA) | Pin(CHB) | [Stereo Support](https://github.com/nathanRamaNoodles/MusicWithoutDelay-LIbrary#new-stereo-support) |
+| ----------------------------------------------------  |:-:|:-:|:-:| :-:|
+| Arduino Uno, Nano, Pro Mini (boards with atmega328p)  | 8 | 11 | 3 |yes|
+| Arduino Micro, Pro Micro (boards with atmega32u4)     | 8 | 6 | N/A |no|
+| Arduino MEGA-2560                                     |~16 | 10| 9 |yes|
+| Teensy 2.0                                            | 8 | 6 | N/A |no|
+| Teensy LC, 3.0+ (the Teensy 3rd generation)           | 30* | 3 | 4| YES!!! (you can output on more than 2 pins)|
+| ESP8266 (under construction)                          | ~8 | RX line(uses i2s) | N/A | No!!! 😡|
+
+#### (NEW) You can change the Teensy's output pin (3rd generation only).  
+* To change, simply call your pin number in the `begin` method.  **But the pin must be PWM.**  For example:
+ ```
+ begin(6,SINE,ENVELOPE0,0)  //output on pin 6
+ //or
+ begin(A9,SINE,ENVELOPE0,0)  //output on pin A9
+ ```
+
+#### How to Change Polyphony
+* For example: The Teensy (3rd generation) is a very powerful chip; however, I had to save some SRAM so I made the max number of voices = 16.  If you want to change it, simply go to source code in **src/synth.cpp** and change the maxVoice settings at **Line 9**.  You can do this for other boards.
+```
+...
+#elif defined(__arm__) && defined(TEENSYDUINO)
+#define maxVOICES 16 //Teensy 3.++; Teensy boards can handle a whooping 30+ simultaneous voices(Teensy is a powerful 32-bit chip)
+...
+```
 
 ## Updates
-* This library has been upgraded to version 3.0.0
+* This library has been upgraded to version 3.5.0
   * previous versions [found here](https://github.com/nathanRamaNoodles/MusicWithoutDelay-LIbrary/releases).
 * Improvements
-  * Added Volume control :)
-  * Added Teensy Support
-  * Option to Override Sustain for notes. **Note: you must call `overrideSustain`** otherwise instrument will choose automatically.
-    * Default is `SUSTAIN`
-    * Reverse effect `REV_SUSTAIN`
-    * Slur effect `NONE`
-  * Fixed issue with **"+"** sign in RTTL format.
-    * Using a `+` instead of a `,`, will give a slur sound effect.
+  * Improved Volume control :)
+  * Created Stereo Support(unlimited stereo or octo-stereo for Teensy)
+  * Added support for Arduino MEGA2560, Arduino atmega32u4, and Teensy 2.0.
   * more to come...
 
 ## Demonstration
@@ -37,20 +87,25 @@ This library should work for the following boards:
   * **So you can view the Serial Monitor, display stuff on an OLED, and read buttons while this library plays your music in the background**
   * This library doesn't use the delay function; it uses a similar technique to [Arduino's BlinkWithoutDelay sketch](https://www.arduino.cc/en/Tutorial/BlinkWithoutDelay).
 * You do not need any shield or extra hardware for this library.
-* **You can play 4 notes at the same time**
+* **You can play unlimited number of notes at the same time**
 * Modulation effects added
 * **Volume Control**
+* **Stereo Support**
 * Pause/resume Song
 * Play song forward and backwards!! :D
 * skipTo a favorite part in the song(The hardest to program, but it was worth it)
-* Sustain effects
+* **Sustain Override** for notes. **Note: you must call `overrideSustain`** otherwise instrument will choose automatically.
+  * Default is `SUSTAIN`
+  * Reverse effect `REV_SUSTAIN`
+  * Slur effect `NONE`
 
 ## Disadvantages(Soon to be fixed)
-* ~~Can't play more than two notes on many arduino boards.~~
-* ~~Tone library creates timer conflicts with Servo library~~
-* ~~I am trying to move away from the Tone library because many common libraries hate it.~~ :D
-* Not working on Arduino Mega 2560.
-* ~~No volume control, yet~~.
+* ~~Can't play more than two notes on many arduino boards.~~ 🔫
+* ~~Tone library creates timer conflicts with Servo library~~🔫
+* ~~I am trying to move away from the Tone library because many common libraries hate it.~~ 🔫 :D
+* ~~Not working on Arduino Mega 2560.~~ 🔫
+* ~~No volume control, yet~~.  🔫
+* Very unstable on ESP8266. 😡
 
 ## Quick Start
 1. Install this library by downloading the zip folder.  Read [this Arduino Library Tutorial](https://www.arduino.cc/en/Guide/Libraries) to install the library.
@@ -189,10 +244,9 @@ MusicWithoutDelay buzzer;
 In order to start our speaker, we need to call the `begin()` function.
 You can call it two ways.
 ```
-begin(int mode, int waveForm, int envelope, int mod)
+begin(int pin, int waveForm, int envelope, int mod)
 ```  
-Where **mode** is the pin connected to the speaker.  It must be `CHA` or `CHB`.  **CHA is pin 11** on UNO, and **CHB is pin 3** on UNO.  
-* `CHB` is more preferred
+Where **pin** is the pin connected to the speaker.  It must be `CHA` or `CHB`.  For example: **CHA is pin 11** on UNO, and **CHB is pin 3** on UNO.  
 
 The **waveForm** can be `SINE`, `SQUARE`, `TRIANGLE`, `SAW`, `RAMP`, or `NOISE`
 * `TRIANGLE` is recommended
@@ -227,9 +281,9 @@ It's been forever, but I finally mastered the art of Timers, and with it I figur
 
 Fortunately, setting the volume is a piece of Cake:
 ```
-buzzer.setVolume(50);// 0-100
+buzzer.setVolume(50);// 0-127
 ```
-The **min volume is 0** and the **max is 100**.
+The **min volume is 0** and the **max is 127**.
 
 # ✨**(New)** Sustain Override
 So, you know how a piano's volume decreases overtime as soon as you play a note?  Well, I've applied the same principle to my library. As a bonus, I've also figured out how to make music sound like it's being played backwards!
@@ -247,6 +301,24 @@ buzzer.setSustain(NONE);        // monotone sound
 buzzer.setSustain(SUSTAIN);     // Normal sustain
 buzzer.setSustain(REV_SUSTAIN); // Backwards effect
 ```
+
+# ✨**(New)** Stereo Support
+For the boards that have stereo support, all you have to do to set the instruments to different pins.  For instance, this will allow sound to come at two pins:
+
+```
+buzzer.begin(CHA,SINE,ENVELOPE0,0);
+buzzer2.begin(CHB,SINE,ENVELOPE0,0);
+```
+
+
+You can even combine buzzers on the same output:
+```
+buzzer.begin(CHA,SINE,ENVELOPE0,0);  //Two Sine waves on both pins
+buzzer2.begin(CHA,SINE,ENVELOPE0,0);
+buzzer3.begin(CHB,SINE,ENVELOPE0,0);
+buzzer4.begin(CHB,SINE,ENVELOPE0,0);
+```
+
 # Functions
 ```
 begin(int mode, int waveForm, int envelope, int mod)//mode can be CHA or CHB  
@@ -300,7 +372,6 @@ NOISE
 //Use these constants for setting the speaker pin
 CHA  //pin 11 on Uno
 CHB  //pin 3 on Uno
-DIFF //Both pin 11 and 3 on Uno
 --------------------------------------------------------
 //Use these constants for setting the type of Envelope
 ENVELOPE0
