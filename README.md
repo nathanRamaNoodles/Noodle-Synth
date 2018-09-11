@@ -1,4 +1,6 @@
 # MusicWithoutDelay Library(v3.5.0)
+[![paypal](https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=HN6V9GRCU4L6U)
+
 An Arduino Library to play infinite polyphonic notes with full control over volume, pitch, and . . . music :D
 * [Quick start here](https://github.com/nathanRamaNoodles/MusicWithoutDelay-LIbrary#quick-start)
 * This library was inspired by [Bhagman's RTTL Arduino sketch](https://github.com/bhagman/Tone/blob/master/examples/RTTTL/RTTTL.pde) and [Dzlonline's synth engine](https://github.com/dzlonline/the_synth)
