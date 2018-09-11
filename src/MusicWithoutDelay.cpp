@@ -831,7 +831,7 @@ MusicWithoutDelay& MusicWithoutDelay::play(int i){
   return *this;
 }
 float MusicWithoutDelay::getNoteAsFrequency(int n){
-    return 440 * pow(twelveRoot, (n - 69));
+  return 440 * pow(twelveRoot, (n - 69));
 }
 MusicWithoutDelay& MusicWithoutDelay::setWave( int waveShape){
   edgar.setWave( myInstrument,waveShape);
@@ -861,6 +861,7 @@ MusicWithoutDelay& MusicWithoutDelay::setVolume(int volume){
   edgar.setVolume(myInstrument,volume);
   return *this;
 }
+
 bool MusicWithoutDelay::isMuted(){
   return isMute;
 }

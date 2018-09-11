@@ -1,14 +1,14 @@
 #include "Arduino.h"
 #include "synth.h"
-//MaxVoices settings
+//MaxVoices settings (This increases memory usage)
 #if defined(__AVR_ATmega2560__)
-#define maxVOICES 16  //Arduino Mega2560; best performance would be 8
+#define maxVOICES 10  //Arduino Mega2560; best performance would be 8
 #elif defined(__AVR__)
-#define maxVOICES 8  //Arduino Uno, Mini, Micro, Pro Micro, Nano, and Teensy 2.0; best performance would be 4, but change this to your microcontroller's processing power :)
+#define maxVOICES 4  //Arduino Uno, Mini, Micro, Pro Micro, Nano, and Teensy 2.0; best performance would be 4, but change this to your microcontroller's processing power :)
 #elif defined(__arm__) && defined(TEENSYDUINO)
 #define maxVOICES 16 //Teensy 3.++; Teensy boards can handle a whooping 30+ simulentaneous voices(Teensy is a powerful 32-bit chip)
 #elif defined(ESP8266)
-#define maxVOICES 5 //ESP8266, ESP32; best performance would be 6
+#define maxVOICES 2 //ESP8266, ESP32; best performance would be 6
 #else
 #error "Hey! This library isn't compatible with this board" //other unknown boards
 #endif
@@ -27,11 +27,11 @@ static unsigned int EFTW[maxVOICES];               //-Envelope speed tuning word
 static unsigned char divider = maxVOICES;                             //-Sample rate decimator for envelope
 static unsigned int tim = 0;
 static unsigned char tik = 0;
-static unsigned char output_mode;
 static unsigned int sustainIt[maxVOICES];//sustain variables
 static unsigned int revSustain[maxVOICES];//sustain variables
 static unsigned int volume[maxVOICES];//volume variables
 static unsigned int numVoice;
+
 
 #if defined(__AVR_ATmega32U4__)
 #  if defined(CORE_TEENSY)  //Teensy 2.0
@@ -57,13 +57,21 @@ static unsigned int numVoice;
 #define mOCR2B OCR2B
 #  endif
 static unsigned int stereoMode[maxVOICES];//stereo variables
+static uint8_t differentVoicesA=0; //number of voices per output
+static uint8_t differentVoicesB=0;
+static float maxVolume[maxVOICES] = {0};
+static uint8_t volumeSetupCounter = 0;
+
 #elif defined(__arm__) && defined(TEENSYDUINO)
 static void timerInterrupt();
 static IntervalTimer sampleTimer;
 static unsigned char sample[maxVOICES];
 static unsigned int originalOutput[maxVOICES] = {0};//voices that initiate the output
 static unsigned int sameOutput[maxVOICES] = {0};//voices that share the same output with the originalOutput
-static unsigned int stereoMode[maxVOICES];//stereo variables
+static unsigned int stereoMode[maxVOICES];//outPut pin locations
+static unsigned int differentVoices=0;
+static float maxVolume[maxVOICES] = {0};
+static uint8_t volumeSetupCounter = 0;
 #elif defined(ESP8266)
 uint32_t i2sACC;
 uint8_t i2sCNT = 32;
@@ -193,11 +201,12 @@ void ICACHE_RAM_ATTR onTimerISR()
       sample[i] = 127;  //reset values to middle of wave
     }
     for (uint8_t i = 0; i < numVoice; i++) {
-      uint8_t giveME = (i!=0 && sameOutput[i]!=0)?sameOutput[i]:originalOutput[i];   //Here is the most important part; I connect the voices that share the same output pin :)
+      uint8_t giveME = (sameOutput[i]!=0)?sameOutput[i]:originalOutput[i];   //Here is the most important part; I connect the voices that share the same output pin :)
       sample[giveME]+=((((signed char)pgm_read_byte(wavs[i] + ((unsigned char *)&(PCW[i] += FTW[i]))[1]) * AMP[i]) >> 8) >> 2); //update wave
     }
-    for(uint8_t i = 0; i < numVoice; i++)
-    if(sample[i]!=127)analogWrite(stereoMode[i], sample[i]);  //Play the wave to corresponding PWM pins
+    for(uint8_t i = 0; i < numVoice; i++){
+      if(sample[i]!=127)analogWrite(stereoMode[i], sample[i]);  //Play the wave to corresponding PWM pins
+    }
     #endif
 
 
@@ -217,7 +226,6 @@ void ICACHE_RAM_ATTR onTimerISR()
 synth::synth(){}
 void synth::begin(unsigned char voice)
 {
-  output_mode=CHA;
   #if defined(__AVR_ATmega32U4__)
   pinMode(speaker_Pin, OUTPUT);
   cli(); // stop interrupts
@@ -272,7 +280,6 @@ void synth::begin(unsigned char voice, unsigned char d)
   #  elif defined(__arm__) && defined(TEENSYDUINO)
   sampleTimer.begin(timerInterrupt, 1000000.0 / FS_music);
   #  endif
-  output_mode=d;
 
   switch(d)
   {
@@ -287,8 +294,8 @@ void synth::begin(unsigned char voice, unsigned char d)
       else if(((unsigned)i)==(numVoice-1)){ //we have reached the end, and have found a unique pin
         // differentVoices++;//different
         // Serial.print("Original: ");Serial.println(voice);
-
         originalOutput[voice] = voice;
+        differentVoices++;
         // Serial.println(differentVoices);
       }
     }
@@ -298,33 +305,27 @@ void synth::begin(unsigned char voice, unsigned char d)
 
     #else
     case CHB:                                         //-Single ended signal on CHB pin (3)
-    #  if defined(__AVR_ATmega2560__)
     stereoMode[voice]= 1;
-    pinMode(speaker_PinB,OUTPUT);
+    differentVoicesB++;
     mTCCR2A = 0xB3;                                  //-8 bit audio PWM
     mTCCR2B = 0x01;                                  // |
     mOCR2B = 127;
+    #  if defined(__AVR_ATmega2560__)
+    pinMode(speaker_PinB,OUTPUT);
     #  elif defined(__AVR__)
-    stereoMode[voice]= 1;
-    mTCCR2A = 0xB3;                                  //-8 bit audio PWM
-    mTCCR2B = 0x01;                                  // |
-    mOCR2B = 127;                            //-+
     SET(DDRD, 3);				      //-PWM pin
     #  endif
     break;
 
     case CHA:
-    #  if defined(__AVR_ATmega2560__)
     stereoMode[voice]= 0;
-    pinMode(speaker_PinA,OUTPUT);
+    differentVoicesA++;
     mTCCR2A = 0xB3;                                  //-8 bit audio PWM
     mTCCR2B = 0x01;                                  // |
     mOCR2A = 127;
+    #  if defined(__AVR_ATmega2560__)
+    pinMode(speaker_PinA,OUTPUT);
     #  elif defined(__AVR__)
-    stereoMode[voice]= 0;
-    mTCCR2A = 0xB3;                                  //-8 bit audio PWM
-    mTCCR2B = 0x01;                                  // |
-    mOCR2A = 127;                            //-+
     SET(DDRB, 3);				      //-PWM pin
     #  endif
     break;
@@ -462,9 +463,46 @@ void synth::setSustain(unsigned char voice, int v)
 }
 void synth::setVolume(unsigned char voice, int v)
 {
-  int _v = map(v, 127, 0, 0, 127);
-  volume[voice] = _v;
+  #if defined(__arm__) && defined(TEENSYDUINO)
+  if(volumeSetupCounter<=numVoice){  //skip the first time this method is called because we don't know how many instruments will share an output pin yet.
+  if(volumeSetupCounter==numVoice){  //one time setup to find maxVolume for each output pin
+    unsigned int store[numVoice] = {0};
+    for (uint8_t j = 0; j < numVoice; j++) {
+      int giveME = (sameOutput[j]!=0)?sameOutput[j]:originalOutput[j];
+      store[giveME] = store[giveME] + 1;   //add up pins that use same output
+      // Serial.println(giveME);
+    }
+    //Calculate maxVolume for each pin.
+    for (uint8_t i = 0; i < numVoice; i++) {
+      maxVolume[i] = (store[i%differentVoices]>4)?(127*(((51-store[i%differentVoices])*2)/120.0)):127;  //apply formula that finds maxVolume depending on the number of voices per pin.
+      // Serial.print("Voice ");Serial.print(i);Serial.print(" , maxVolume: ");Serial.print(maxVolume[i]);Serial.print(" , numberPins: ");Serial.println(store[i%differentVoices]);
+    }
+  }
+  volumeSetupCounter++;  //never come back here again
 }
+volume[voice] = map(v, 127, 0, 127-maxVolume[voice], 127);
+
+#elif defined(__AVR_ATmega32U4__) || defined(ESP8266)  //no need to check same output, because these boards don't support Stereo mode :'(
+  float maxVolume = (numVoice>4)?(127*(((49-numVoice)*2)/120.0)):127;
+  volume[voice] = map(v, 127, 0,127 - maxVolume, 127);
+
+  #else  //Uno and Mega
+  if(volumeSetupCounter<=numVoice){  //skip the first time this method is called because we don't know how many instruments will share an output pin yet.
+  if(volumeSetupCounter==numVoice){  //one time setup to find maxVolume for each output pin
+    float maxVolumeA = (differentVoicesA>3)?(127*(((49-differentVoicesA)*2)/120.0)):127;  //Calculate maxVolume for each pin.
+    float maxVolumeB = (differentVoicesB>3)?(127*(((49-differentVoicesB)*2)/120.0)):127;
+    for (uint8_t j = 0; j < numVoice; j++) {
+      maxVolume[j] = (stereoMode[j]==0)? maxVolumeA:maxVolumeB;
+      // Serial.print("Voice ");Serial.print(j);Serial.print(" , maxVolume: ");Serial.print(maxVolume[j]);Serial.print(" , numberPins: ");Serial.println((stereoMode[j]==0)? differentVoicesA:differentVoicesB);
+    }
+  }
+  volumeSetupCounter++;  //never come back here again
+}
+// volume[voice] = map(v, 127, 0, 0, 127);
+  volume[voice] = map(v, 127, 0, 127-maxVolume[voice], 127);  //set volume using maxVolume
+#endif
+}
+
 //*********************************************************************
 //  Midi trigger
 //*********************************************************************

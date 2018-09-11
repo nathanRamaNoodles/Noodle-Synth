@@ -150,7 +150,8 @@ public:
   MusicWithoutDelay& skipTo(long index);
   MusicWithoutDelay& overrideSustain(bool v);
   // void readIt();
-  float getNoteAsFrequency(int n);
+  static float getNoteAsFrequency(int n);
+
   long getTotalTime();
   long getCurrentTime();
   int getBPM();

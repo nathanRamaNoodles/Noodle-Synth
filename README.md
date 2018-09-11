@@ -40,17 +40,18 @@ An Arduino Library to play infinite polyphonic notes with full control over volu
 ## Compatibility
 This library should work for the following boards:
 * **Please note that polyphony depends on your microcontroller's processor speed.**
+* The stable polyphony means that the board can handle playing the corresponding amount of notes at the same time without any issues/lag.  [To change the stable polyphony, go here](https://github.com/nathanRamaNoodles/MusicWithoutDelay-LIbrary#how-to-change-polyphony).
 
-| Board  |                          Max Polyphony | Pin(CHA) | Pin(CHB) | [Stereo Support](https://github.com/nathanRamaNoodles/MusicWithoutDelay-LIbrary#new-stereo-support) |
-| ----------------------------------------------------  |:-:|:-:|:-:| :-:|
-| Arduino Uno, Nano, Pro Mini (boards with atmega328p)  | 8 | 11 | 3 |yes|
-| Arduino Micro, Pro Micro (boards with atmega32u4)     | 8 | 6 | N/A |no|
-| Arduino MEGA-2560                                     |~16 | 10| 9 |yes|
-| Teensy 2.0                                            | 8 | A9 | N/A |no|
-| Teensy LC, 3.0+ (the Teensy 3rd generation)           | 30* | 3 | 4| YES!!! (you can output on more than 2 pins)|
-| ESP8266 (under construction)                          | ~8 | RX line(uses i2s) | N/A | No!!! 😡|
+| Board  |                         Stable Polyphony |Max Polyphony(Might be unstable) | Pin(CHA) | Pin(CHB) | [Stereo Support](https://github.com/nathanRamaNoodles/MusicWithoutDelay-LIbrary#new-stereo-support) |
+| :----------------------------------------------------  |:-:|:-:|:-:|:-:| :-:|
+| Arduino Uno, Nano, Pro Mini (boards with atmega328p)  |4| 8 | 11 | 3 |yes|
+| Arduino Micro, Pro Micro (boards with atmega32u4)     |4| 8 | 6 | N/A |no|
+| Arduino MEGA-2560                                     |10|16~18 | 10| 9 |yes|
+| Teensy 2.0                                            |4| 8 | A9 | N/A |no|
+| Teensy LC, 3.0+ (the Teensy 3rd generation)           |16| 30* | 3 | 4| YES!!! (you can output on more than 2 pins)|
+| ESP8266 (under construction)                          |2| ~8 | RX line(uses i2s) | N/A | No!!! 😡|
 
-#### (NEW) You can change the Teensy's output pin (3rd generation only).  
+### (NEW) You can change the Teensy's output pin (3rd generation only).  
 * To change, simply call your pin number in the `begin` method.  **But the pin must be PWM.**  For example:
  ```
  begin(6,SINE,ENVELOPE0,0)  //output on pin 6
@@ -58,8 +59,8 @@ This library should work for the following boards:
  begin(A9,SINE,ENVELOPE0,0)  //output on pin A9
  ```
 
-#### How to Change Polyphony
-* For example: The Teensy (3rd generation) is a very powerful chip; however, I had to save some SRAM so I made the max number of voices = 16.  If you want to change it, simply go to source code in **src/synth.cpp** and change the maxVoice settings at **Line 9**.  You can do this for other boards.
+### How to Change Polyphony
+* For example: The Teensy (3rd generation) is a very powerful chip; however, I had to save some **SRAM** so I made the max number of voices = 16.  If you want to change it, simply go to source code in [src/synth.cpp](https://github.com/nathanRamaNoodles/MusicWithoutDelay-LIbrary/blob/master/src/synth.cpp) and change the maxVoice settings at **Line 9**.  You can do this for other boards.
 ```
 ...
 #elif defined(__arm__) && defined(TEENSYDUINO)
@@ -68,12 +69,10 @@ This library should work for the following boards:
 ```
 
 ## Updates
-* This library has been upgraded to version 3.5.0
+* This library has been upgraded to version 3.5.1
   * previous versions [found here](https://github.com/nathanRamaNoodles/MusicWithoutDelay-LIbrary/releases).
 * Improvements
-  * Improved Volume control :)
-  * Created Stereo Support(unlimited stereo or octo-stereo for Teensy)
-  * Added support for Arduino MEGA2560, Arduino atmega32u4, and Teensy 2.0.
+  * Created an anti-clip algorithm that adjusts the Volume to avoid static noise :)
   * more to come...
 
 ## Demonstration
@@ -91,10 +90,11 @@ This library should work for the following boards:
 * **You can play unlimited number of notes at the same time**
 * Modulation effects added
 * **Volume Control**
+	* Anti-clipping algorithm prevents static noise
 * **Stereo Support**
 * Pause/resume Song
 * Play song forward and backwards!! :D
-* skipTo a favorite part in the song(The hardest to program, but it was worth it)
+* `skipTo()` a favorite part in the song(The hardest to program, but it was worth it)
 * **Sustain Override** for notes. **Note: you must call `overrideSustain`** otherwise instrument will choose automatically.
   * Default is `SUSTAIN`
   * Reverse effect `REV_SUSTAIN`
