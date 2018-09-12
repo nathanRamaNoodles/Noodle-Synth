@@ -1,14 +1,17 @@
-# MusicWithoutDelay Library(v3.5.0)
+# MusicWithoutDelay Library(v3.5.1)
+
 [![paypal](https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=HN6V9GRCU4L6U)
 
-An Arduino Library to play infinite polyphonic notes with full control over volume, pitch, and . . . music :D
+**Description**: A non-blocking Arduino Library to play infinite polyphonic notes with full control over volume, pitch, modulation, and . . . music :D
+* [Videos here](https://github.com/nathanRamaNoodles/MusicWithoutDelay-LIbrary#demonstration)
 * [Quick start here](https://github.com/nathanRamaNoodles/MusicWithoutDelay-LIbrary#quick-start)
+* [What's new?](https://github.com/nathanRamaNoodles/MusicWithoutDelay-LIbrary#updates)
 * This library was inspired by [Bhagman's RTTL Arduino sketch](https://github.com/bhagman/Tone/blob/master/examples/RTTTL/RTTTL.pde) and [Dzlonline's synth engine](https://github.com/dzlonline/the_synth)
 
 ## Table of Contents
 <!-- TOC depthFrom:1 depthTo:6 withLinks:1 updateOnSave:undefined orderedList:0 -->
 
-- [MusicWithoutDelay Library](#musicwithoutdelay-libraryv350)
+- [MusicWithoutDelay Library](#musicwithoutdelay-libraryv351)
 	- [Compatibility](#compatibility)
       - [Change Teensy pins](#new-you-can-change-the-teensys-output-pin-3rd-generation-only)
 	- [How to Change Polyphony](#how-to-change-polyphony)
@@ -74,6 +77,7 @@ This library should work for the following boards:
 * This library has been upgraded to version 3.5.1
   * previous versions [found here](https://github.com/nathanRamaNoodles/MusicWithoutDelay-LIbrary/releases).
 * Improvements
+	* Added videos to demonstration
   * Created an anti-clip algorithm that adjusts the Volume to avoid static noise :)
   * more to come...
 
@@ -81,8 +85,12 @@ This library should work for the following boards:
 
 * v1.0.0 demo
   * Check out [this video](https://youtu.be/uoHhlrqZYDI) for a Legend of Zelda music demonstration.  In the video, an Arduino Nano outputs two voices. The Arduino uses a vibrating motor as a percussion instrument, and an RGB LED to add some fire to the show.  The delay function is not used at all :)
-* v3.0.0 demo
-  * coming soon...
+* v3.5.1 demo
+	* [Introduction to Library](https://www.youtube.com/watch?v=SnHucYUKfMM)
+	* [How to change max note polyphony](https://www.youtube.com/watch?v=N2jZ9EwdiJM)
+	* [Play Music](https://www.youtube.com/watch?v=3NRbqMfplmI)
+	  * [Do stuff while playing music](https://www.youtube.com/watch?v=U37jHJSXU2g&t=206s)
+	* [30-note polyphony on Teensy](https://www.youtube.com/watch?v=L077CAO5ABE)
 
 ## Advantages
 * This Arduino Library makes an Arduino board play music in the background while running your program(Assuming your code doesn't have any delay).  

@@ -45,7 +45,7 @@ bool recursion, isHeld;
 int sustain[3] = {1, 1, 1};
 
 void setup() {
-//  Serial.begin(9600);
+  Serial.begin(9600);
   pinMode(potPin, INPUT);
   buzzer.begin(CHA,RAMP, ENVELOPE0, 0);   //CHB means pin 3 on Arduino UNO, CHA means pin 11, DIFF means both
   buzzer2.begin(RAMP, ENVELOPE0, 0);
@@ -56,10 +56,10 @@ void setup() {
   buzzer.overrideSustain(true);//must override built-in sustains to modify song's sustains at runtime
   buzzer2.overrideSustain(true);
   buzzer3.overrideSustain(true);
-//  Serial.println(F("Type '1','2', or '3' to pause the corresponding instrument.  If you let one of the instruments to finish, the arduino will restart from the beginning."));
-//  Serial.println(F("Type more than one number to pause multiple instruments"));
-//  Serial.println(F("Also, type 'b' to play the song backwards, and press `z`, `x`, and `c` to hear the sustains corresponding to each instrument"));
-//  Serial.print(F("TotalTime: ")); Serial.print(buzzer.getTotalTime() / 1E3); Serial.println(F(" seconds"));
+  Serial.println(F("Type '1','2', or '3' to pause the corresponding instrument.  If you let one of the instruments to finish, the arduino will restart from the beginning."));
+  Serial.println(F("Type more than one number to pause multiple instruments"));
+  Serial.println(F("Also, type 'b' to play the song backwards, and press `z`, `x`, and `c` to hear the sustains corresponding to each instrument"));
+  Serial.print(F("TotalTime: ")); Serial.print(buzzer.getTotalTime() / 1E3); Serial.println(F(" seconds"));
 }
 void loop() {
   btn.read();
@@ -97,41 +97,41 @@ void loop() {
   }
   if (!save)
     proper_Restart(); //corrects overlapping at end of song
-//  if (Serial.available()) {
-//    char str = Serial.read();
-//    switch (str) {
-//      case '1':  //type '1' in Serial monitor.
-//        buzzer.pause(!buzzer.isPaused());
-//        (buzzer.isPaused()) ? count++ : count--;     //ternary operator is faster than if/else statements.
-//        (count == NUM) ? save = true : save = false;
-//        break;
-//      case '2':  //type '2' in Serial monitor.
-//        buzzer2.pause(!buzzer2.isPaused());
-//        (buzzer2.isPaused()) ? count++ : count--;
-//        (count == NUM) ? save = true : save = false;
-//        break;
-//      case '3':  //type '3' in Serial monitor.
-//        buzzer3.pause(!buzzer3.isPaused());
-//        (buzzer3.isPaused()) ? count++ : count--;
-//        (count == NUM) ? save = true : save = false;
-//        break;
-//      case 'b':
-//        backwards();
-//        break;
-//      case 'z':
-//        sustain[0] = !sustain[0];
-//        buzzer.setSustain(sustain[0]);
-//        break;
-//      case 'x':
-//        sustain[1] = !sustain[1];
-//        buzzer2.setSustain(sustain[1]);
-//        break;
-//      case 'c':
-//        sustain[2] = !sustain[2];
-//        buzzer3.setSustain(sustain[2]);
-//        break;
-//    }
-//  }
+  if (Serial.available()) {
+    char str = Serial.read();
+    switch (str) {
+      case '1':  //type '1' in Serial monitor.
+        buzzer.pause(!buzzer.isPaused());
+        (buzzer.isPaused()) ? count++ : count--;     //ternary operator is faster than if/else statements.
+        (count == NUM) ? save = true : save = false;
+        break;
+      case '2':  //type '2' in Serial monitor.
+        buzzer2.pause(!buzzer2.isPaused());
+        (buzzer2.isPaused()) ? count++ : count--;
+        (count == NUM) ? save = true : save = false;
+        break;
+      case '3':  //type '3' in Serial monitor.
+        buzzer3.pause(!buzzer3.isPaused());
+        (buzzer3.isPaused()) ? count++ : count--;
+        (count == NUM) ? save = true : save = false;
+        break;
+      case 'b':
+        backwards();
+        break;
+      case 'z':
+        sustain[0] = !sustain[0];
+        buzzer.setSustain(sustain[0]);
+        break;
+      case 'x':
+        sustain[1] = !sustain[1];
+        buzzer2.setSustain(sustain[1]);
+        break;
+      case 'c':
+        sustain[2] = !sustain[2];
+        buzzer3.setSustain(sustain[2]);
+        break;
+    }
+  }
 
 }
 void proper_Restart() { //this method avoids accidental overlapping in songs with different total times
