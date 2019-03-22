@@ -23,16 +23,10 @@ SOFTWARE.
 */
 #include "Arduino.h"
 #include "MusicWithoutDelay.h"
+#include "Noodles_Settings.h"
 static uint8_t globalInstrument=0;
-static const int notes[] = { 0,
-  NOTE_C1, NOTE_CS1, NOTE_D1, NOTE_DS1, NOTE_E1, NOTE_F1, NOTE_FS1, NOTE_G1, NOTE_GS1, NOTE_A1, NOTE_AS1, NOTE_B1,
-  NOTE_C2, NOTE_CS2, NOTE_D2, NOTE_DS2, NOTE_E2, NOTE_F2, NOTE_FS2, NOTE_G2, NOTE_GS2, NOTE_A2, NOTE_AS2, NOTE_B2,
-  NOTE_C3, NOTE_CS3, NOTE_D3, NOTE_DS3, NOTE_E3, NOTE_F3, NOTE_FS3, NOTE_G3, NOTE_GS3, NOTE_A3, NOTE_AS3, NOTE_B3,
-  NOTE_C4, NOTE_CS4, NOTE_D4, NOTE_DS4, NOTE_E4, NOTE_F4, NOTE_FS4, NOTE_G4, NOTE_GS4, NOTE_A4, NOTE_AS4, NOTE_B4,
-  NOTE_C5, NOTE_CS5, NOTE_D5, NOTE_DS5, NOTE_E5, NOTE_F5, NOTE_FS5, NOTE_G5, NOTE_GS5, NOTE_A5, NOTE_AS5, NOTE_B5,
-  NOTE_C6, NOTE_CS6, NOTE_D6, NOTE_DS6, NOTE_E6, NOTE_F6, NOTE_FS6, NOTE_G6, NOTE_GS6, NOTE_A6, NOTE_AS6, NOTE_B6,
-  NOTE_C7, NOTE_CS7, NOTE_D7, NOTE_DS7, NOTE_E7, NOTE_F7, NOTE_FS7, NOTE_G7, NOTE_GS7, NOTE_A7, NOTE_AS7, NOTE_B7
-};
+synthEngine * MusicWithoutDelay::noodleSynth = NULL; //This is extremely important for initiating a static private Object
+
 static const int powers[] = {1, 10, 100, 1000};
 double dur = 0;
 bool firstTime;
@@ -43,27 +37,25 @@ MusicWithoutDelay::MusicWithoutDelay(const char *p) {
   wholenote = (60 * 1000L / bpm) * 4;
   myInstrument=globalInstrument;
   globalInstrument++;
-  edgar.setNumVoices(globalInstrument);
   newSong(p);
 }
 MusicWithoutDelay::MusicWithoutDelay() {
   myInstrument=globalInstrument;
   globalInstrument++;
-  edgar.setNumVoices(globalInstrument);
   playSingleNote=true;
 }
 MusicWithoutDelay& MusicWithoutDelay:: begin(int mode, int waveForm, int envelope, int mod){
 
-  edgar.begin(myInstrument, mode);
-  edgar.setupVoice(myInstrument,waveForm,60,envelope,70,mod+64);
+  noodleSynth->begin(myInstrument, mode);
+  noodleSynth->setupVoice(myInstrument,waveForm,60,envelope,70,mod+64);
   return *this;
 }
 MusicWithoutDelay& MusicWithoutDelay:: begin(int waveForm, int envelope, int mod){
   if(myInstrument<1)
-  edgar.begin(myInstrument, CHA); //default channel
+  noodleSynth->begin(myInstrument, CHA); //default channel
   else
-  edgar.begin(myInstrument);
-  edgar.setupVoice(myInstrument,waveForm,60,envelope,70,mod+64);
+  noodleSynth->begin(myInstrument);
+  noodleSynth->setupVoice(myInstrument,waveForm,60,envelope,70,mod+64);
   return *this;
 }
 MusicWithoutDelay& MusicWithoutDelay:: newSong(const char *p) {
@@ -168,10 +160,15 @@ MusicWithoutDelay&  MusicWithoutDelay:: update() {
   //Serial.print("Delayer: ");Serial.println(delayer);
   // format: d=N,o=N,b=NNN:
   // find the start (skip name, etc)
+
+  // #if defined(ESP32)
+  // if(myInstrument == 0)
+  // noodleSynth->updateDAC();
+  // #endif
   uint32_t cM = millis();
   if(playSingleNote){
     if(!resume&&!isMute)
-    edgar.trigger(myInstrument);
+    noodleSynth->trigger(myInstrument);
   }
   else{
     if(flagRepeat){
@@ -249,7 +246,7 @@ MusicWithoutDelay&  MusicWithoutDelay:: update() {
             else{
               set=55;
             }
-            edgar.setLength(myInstrument,set);
+            noodleSynth->setLength(myInstrument,set);
 
             // now get the note
             note = 0;
@@ -378,7 +375,7 @@ MusicWithoutDelay&  MusicWithoutDelay:: update() {
             }
             if (note) {
               if(!isMute)
-              edgar.mTrigger(myInstrument,notes[(scale - 1) * 12 + note]);
+              noodleSynth->mTrigger(myInstrument, (NOTE_C1 - 1)+((scale - 1) * 12 + note));
               beat = !beat;
             }
             else
@@ -547,7 +544,7 @@ MusicWithoutDelay&  MusicWithoutDelay:: update() {
             else{
               set=55;
             }
-            edgar.setLength(myInstrument,set);
+            noodleSynth->setLength(myInstrument,set);
 
 
             while (isWhitespace(pgm_read_byte_near(mySong+loc))) {
@@ -580,7 +577,7 @@ MusicWithoutDelay&  MusicWithoutDelay:: update() {
             }
             if (note) {
               if(!isMute)
-              edgar.mTrigger(myInstrument,notes[(scale - 1) * 12 + note]);
+              noodleSynth->mTrigger(myInstrument,(NOTE_C1 - 1)+((scale - 1) * 12 + note));
               beat = !beat;
             }
             else
@@ -611,7 +608,7 @@ MusicWithoutDelay&  MusicWithoutDelay:: update() {
           oneMillis = cM;
           if (wasPlaying) {
             if(!isMute)
-            edgar.mTrigger(myInstrument,notes[(scale - 1) * 12 + note]);
+            noodleSynth->mTrigger(myInstrument,(NOTE_C1 - 1)+((scale - 1) * 12 + note));
             wasPlaying = false;
           }
           oneTime = false;
@@ -834,11 +831,11 @@ float MusicWithoutDelay::getNoteAsFrequency(int n){
   return 440 * pow(twelveRoot, (n - 69));
 }
 MusicWithoutDelay& MusicWithoutDelay::setWave( int waveShape){
-  edgar.setWave( myInstrument,waveShape);
+  noodleSynth->setWave( myInstrument,waveShape);
   return *this;
 }
 MusicWithoutDelay& MusicWithoutDelay::setSustain(int v){
-  edgar.setSustain(myInstrument, v);
+  noodleSynth->setSustain(myInstrument, v);
   return *this;
 }
 MusicWithoutDelay& MusicWithoutDelay::overrideSustain(bool v){
@@ -849,16 +846,16 @@ bool MusicWithoutDelay::isSustainOverrided(){
   return sustainControl;
 }
 MusicWithoutDelay& MusicWithoutDelay::setMod( int percent){
-  edgar.setMod(myInstrument,percent+64);
+  noodleSynth->setMod(myInstrument,percent+64);
   return *this;
 }
 MusicWithoutDelay& MusicWithoutDelay::setFrequency(float freq){
   playSingleNote=true;
-  edgar.setFrequency(myInstrument,freq);
+  noodleSynth->setFrequency(myInstrument,freq);
   return *this;
 }
 MusicWithoutDelay& MusicWithoutDelay::setVolume(int volume){
-  edgar.setVolume(myInstrument,volume);
+  noodleSynth->setVolume(myInstrument,volume);
   return *this;
 }
 
@@ -867,4 +864,7 @@ bool MusicWithoutDelay::isMuted(){
 }
 bool MusicWithoutDelay :: isBackwards() {
   return reversed;
+}
+void MusicWithoutDelay::setEngine(synthEngine *engine){
+  noodleSynth = engine;
 }

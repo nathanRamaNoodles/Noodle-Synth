@@ -1,5 +1,4 @@
-# MusicWithoutDelay Library(v3.5.2)
-[![arduino-library-badge](https://www.ardu-badge.com/badge/MusicWithoutDelay.svg)](https://www.ardu-badge.com/MusicWithoutDelay)
+# MusicWithoutDelay Library(v3.5.1)
 
 [![paypal](https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=HN6V9GRCU4L6U)
 
@@ -75,7 +74,7 @@ This library should work for the following boards:
 ```
 
 ## Updates
-* This library has been upgraded to version 3.5.2
+* This library has been upgraded to version 3.5.1
   * previous versions [found here](https://github.com/nathanRamaNoodles/MusicWithoutDelay-LIbrary/releases).
 * Improvements
 	* Added videos to demonstration
@@ -86,7 +85,7 @@ This library should work for the following boards:
 
 * v1.0.0 demo
   * Check out [this video](https://youtu.be/uoHhlrqZYDI) for a Legend of Zelda music demonstration.  In the video, an Arduino Nano outputs two voices. The Arduino uses a vibrating motor as a percussion instrument, and an RGB LED to add some fire to the show.  The delay function is not used at all :)
-* v3.5.2 demo
+* v3.5.1 demo
 	* [Introduction to Library](https://www.youtube.com/watch?v=SnHucYUKfMM)
 	* [How to change max note polyphony](https://www.youtube.com/watch?v=N2jZ9EwdiJM)
 	* [Play Music](https://www.youtube.com/watch?v=3NRbqMfplmI)

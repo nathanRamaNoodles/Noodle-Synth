@@ -1,0 +1,202 @@
+#include <fancySynth.h>
+fancySynth edgar;
+
+#define NUM 16   //number of polyphonic notes you think the song will have(NOTE: you must change the MAXVOICE settings in synth.cpp to get even more polyphony)
+const int NumChannels = (NUM > 16) ? (NUM / 2) : NUM; //number of channels used in your song, max is usually 16.  Keeping this small is best when you want more polyphony per channel
+
+#define SUStain
+//comment this out to remove sustain
+#define percussionChannel 10
+struct storedMIDI {
+  bool isPedalSustain = false;
+  int pitchBend = 64;
+  int currentVolume = 127;
+  int waveForm = SQUARE;
+};
+storedMIDI tempData[NumChannels];
+int waveForms[4] = {SINE, TRIANGLE, RAMP, SQUARE};
+#include <MIDI.h>
+
+#if defined(__AVR_ATmega2560__)//Arduino Mega
+MIDI_CREATE_INSTANCE(HardwareSerial, Serial1, midibench);
+#elif defined(AVR)  //Arduino Uno/Mini etc
+MIDI_CREATE_INSTANCE(HardwareSerial, Serial, midibench);
+#else  //Teensy or others
+MIDI_CREATE_INSTANCE(HardwareSerial, Serial1, midibench);
+#endif
+
+
+int pins[2] = {CHB, CHB};
+// -----------------------------------------------------------------------------
+
+// This example shows the old way of checking for input messages.
+// It's simpler to use the callbacks now, check out the dedicated example.
+
+#define LED 13                   // LED pin on Arduino Uno
+
+// -----------------------------------------------------------------------------
+void handleNoteOn(byte channel, byte pitch, byte velocity)
+{
+  //  Serial.print("NOTE on\t");
+  //  Serial.print("channel: ");
+  //  Serial.print(channel);
+  //  Serial.print(", pitch=");
+  //  Serial.print(pitch);
+  //  Serial.print(", velocity=");
+  //  Serial.println(velocity);
+
+  digitalWrite(LED, HIGH);
+
+  int i;
+  for (i = 0; i < NUM; i++) { //find a polyphony instrument that isn't taken at the moment
+    if ((edgar.getNote(i) == (pitch + 1)) || (edgar.getVolume(i) == 0) )
+      break;
+  }
+  edgar.setChannel(i, channel);  //if true, then use idle polyphony engines
+  if (percussionChannel != channel) {
+    //    Serial.print("Saved volume: "); Serial.println(tempData.currentVolume);
+    for (int c = 0; c < NUM; c++) { //update all instruments that are on the same channel
+      if (edgar.getChannel(c) == channel ) {
+        edgar.setPedalSustain(c, tempData[channel].isPedalSustain);
+        edgar.setVolume(c, tempData[channel].currentVolume);
+        edgar.setWave(c, tempData[channel].waveForm);
+#if defined(__arm__) && defined(TEENSYDUINO)
+        edgar.setMod(c, tempData[channel].pitchBend);
+#endif
+      }
+    }
+#if defined(__arm__) && defined(TEENSYDUINO)
+    velocity -= (velocity >= 110) ? 20 : 0;
+#else
+    velocity -= (velocity >= 110) ? 50 : 0;
+#endif
+    edgar.mTrigger(i, pitch + 1);
+    edgar.setLength(i, velocity);
+  }
+  else {
+    percussion(i, (pitch + 1), velocity);
+  }
+}
+
+void handleNoteOff(byte channel, byte pitch, byte velocity)
+{
+  //  Serial.print("NOTE off\t");
+  //  Serial.print("channel: ");
+  //  Serial.print(channel);
+  //  Serial.print(", pitch=");
+  //  Serial.print(pitch);
+  //  Serial.print(", velocity=");
+  //  Serial.println(velocity);
+  digitalWrite(13, LOW);
+  int i;
+  for (i = 0; i < NUM; i++) { //find the polyphony instrument that you assigned a channel earlier in noteOn
+    if ((edgar.getChannel(i) == channel) && (edgar.getNote(i) == (pitch + 1))) {
+#if defined(__arm__) && defined(TEENSYDUINO)
+      edgar.setLength(i, 16);
+#else
+      edgar.setLength(i, 16);
+#endif
+      break;
+    }
+  }
+}
+void percussion(byte availableVoice, byte percussionType, byte velocity) {
+  //  Serial.print("Voice available: ");
+  //  Serial.print(availableVoice);
+  //  Serial.print(", Percussion: ");
+  //  Serial.println(percussionType);
+
+  //  switch (percussionType) {
+  //    case 36:  //bass drum
+  //      edgar.setWave(availableVoice, SINE);
+  //      edgar.mTrigger(availableVoice, 82);  // instrument, note
+  //      edgar.setMod(availableVoice, 33);
+  //      edgar.setLength(availableVoice, 64);
+  //      break;
+  //    case 38: //snare with cymbal
+  //      edgar.setWave(availableVoice, NOISE);
+  //      edgar.mTrigger(availableVoice, 68);  // instrument, note
+  //      edgar.setMod(availableVoice, 33);
+  //      edgar.setLength(availableVoice, 69);
+  //      break;
+  //  }
+}
+void myControlChange(byte channel, byte control, byte value) {
+  //  Serial.print("channel: ");
+  //  Serial.print(channel);
+  //  Serial.print(", control=");
+  //  Serial.print(control);
+  //  Serial.print(", value=");
+  //  Serial.println(value);
+
+  switch (control) {
+    case 7:
+      tempData[channel].currentVolume = value;
+      //      Serial.print("message volume: "); Serial.println(tempData[channel].currentVolume);
+      for (int i = 0; i < NUM; i++) {
+        if (edgar.getChannel(i) == channel)
+          edgar.setVolume(i, value);
+      }
+      break;
+    case 64:
+#if defined(SUStain)
+      tempData[channel].isPedalSustain = value;
+      //      Serial.print("message sustain: "); Serial.println(tempData[channel].isPedalSustain);
+      for (int i = 0; i < NUM; i++) {
+        if (edgar.getChannel(i) == channel) {
+          edgar.setPedalSustain(i, value);
+        }
+      }
+#endif
+      break;
+  }
+}
+
+void instrumentChange(byte channel, byte instrument) {
+  //  Serial.print("channel: ");
+  //  Serial.print(channel);
+  //  Serial.print(", instrument= ");
+  //  Serial.println(instrument);
+
+
+  tempData[channel].waveForm = waveForms[instrument];
+  for (int i = 0; i < NUM; i++) {
+    if (edgar.getChannel(i) == channel) {
+      edgar.setWave(i, waveForms[instrument]);
+    }
+  }
+}
+// -----------------------------------------------------------------------------
+
+void setup()
+{
+  pinMode(LED, OUTPUT);
+
+  edgar.setNumVoices(NUM);
+  midibench.setHandleNoteOff(handleNoteOff);
+  midibench.setHandleNoteOn(handleNoteOn);
+  midibench.setHandleControlChange(myControlChange);
+  midibench.setHandleProgramChange(instrumentChange);
+  midibench.begin(MIDI_CHANNEL_OMNI);
+
+  for (int i = 0; i < NUM; i++) {
+    edgar.begin(i, pins[i % (sizeof(pins) / sizeof(pins[0]))]);
+    edgar.setupVoice(i, waveForms[0], 60, ENVELOPE0, 127, 64);
+    edgar.setChannel(i, 1);
+  }
+#if defined(__AVR_ATmega2560__)||defined(__arm__) && defined(TEENSYDUINO)
+  Serial1.begin(31250);
+  Serial.begin(115200);
+  Serial.println("Done Setting up");
+#else
+  Serial.begin(31250);
+#endif
+}
+
+void loop()
+{
+  midibench.read();
+  for (int i = 0; i < NUM; i++) {
+    edgar.setVolume(i, 127);   //some pianos don't offer indiviual volume control, so you might need to use a potentionmeter to adjest the volume from here.
+  }
+}

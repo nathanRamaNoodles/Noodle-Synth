@@ -6,11 +6,15 @@
 # Datatypes (KEYWORD1)
 #######################################
 
+NoodleSynth	KEYWORD1
 MusicWithoutDelay	KEYWORD1
+synthEngine	KEYWORD1
 
 #######################################
 # Methods and Functions (KEYWORD2)
 #######################################
+
+setupVoice	KEYWORD2
 
 update	KEYWORD2
 play	KEYWORD2
@@ -21,6 +25,10 @@ newSong	KEYWORD2
 setBPM	KEYWORD2
 setWave	KEYWORD2
 setMod	KEYWORD2
+setNote	KEYWORD2
+setEnvelope	KEYWORD2
+setChannel	KEYWORD2
+setPedalSustain	KEYWORD2
 setFrequency	KEYWORD2
 setOctave	KEYWORD2
 setSustain	KEYWORD2
@@ -29,6 +37,12 @@ overrideSustain	KEYWORD2
 isSustainOverrided	KEYWORD2
 reverse	KEYWORD2
 skipTo	KEYWORD2
+getWave	KEYWORD2
+getAvailablePiston	KEYWORD2
+getVolume	KEYWORD2
+getNote	KEYWORD2
+getChannel	KEYWORD2
+getSustain	KEYWORD2
 getNoteAsFrequency	KEYWORD2
 getTotalTime	KEYWORD2
 getCurrentTime	KEYWORD2
@@ -42,8 +56,14 @@ isPaused	KEYWORD2
 isNote	KEYWORD2
 isBackwards	KEYWORD2
 isSingleNote	KEYWORD2
+isPedalSustain	KEYWORD2
 #######################################
 # Constants (LITERAL1)
+
+pitchOffset	LITERAL1
+maxVOICES	LITERAL1
+twelveRoot	LITERAL1
+pitchBendRoot	LITERAL1
 
 NOTE_B0	LITERAL1
 NOTE_C1	LITERAL1

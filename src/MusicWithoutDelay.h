@@ -29,12 +29,9 @@ SOFTWARE.
 #define MusicWithoutDelay_h
 
 #include "Arduino.h"
-#include "synth.h" // synth engine
-static synth edgar;
+#include "synthEngine.h"
 
-#define twelveRoot 1.059463094359
 
-#define NOTE_B0  23
 #define NOTE_C1  24
 #define NOTE_CS1 25
 #define NOTE_D1  26
@@ -68,7 +65,7 @@ static synth edgar;
 #define NOTE_FS3 54
 #define NOTE_G3  55
 #define NOTE_GS3 56
-#define NOTE_A3  57
+#define NOTE_A3  57 //A3
 #define NOTE_AS3 58
 #define NOTE_B3  59
 #define NOTE_C4  60  //middle C
@@ -80,7 +77,7 @@ static synth edgar;
 #define NOTE_FS4 66
 #define NOTE_G4  67
 #define NOTE_GS4 68
-#define NOTE_A4  69
+#define NOTE_A4  69  //A4 440 Hz
 #define NOTE_AS4 70
 #define NOTE_B4  71
 #define NOTE_C5  72
@@ -151,6 +148,7 @@ public:
   MusicWithoutDelay& overrideSustain(bool v);
   // void readIt();
   static float getNoteAsFrequency(int n);
+  static void setEngine(synthEngine *engine);
 
   long getTotalTime();
   long getCurrentTime();
@@ -195,5 +193,6 @@ private:
   char autoSharp[5];
   char songName[15];  //make this smaller to get more SRAM
   const char *mySong;
+  static synthEngine *noodleSynth;
 };
 #endif

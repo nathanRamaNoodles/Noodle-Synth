@@ -5,7 +5,12 @@
 
 //This table id compatible with 20000.00 Hz. sampling rate
 //Envelope frequency tuning word vs. MIDI range value [0-127]
-const uint16_t PROGMEM EFTWS[]={
+#if defined(ESP32)
+const uint16_t EFTWS[]=
+#else
+const uint16_t PROGMEM EFTWS[]=
+#endif
+{
 0x0371,0x0340,0x0311,0x02E5,0x02BB,0x0294,0x026F,0x024C,0x022B,0x020C,0x01EE,0x01D3,0x01B8,0x01A0,0x0188,0x0172,
 0x015D,0x014A,0x0137,0x0126,0x0115,0x0106,0x00F7,0x00E9,0x00DC,0x00D0,0x00C4,0x00B9,0x00AE,0x00A5,0x009B,0x0093,
 0x008A,0x0083,0x007B,0x0074,0x006E,0x0068,0x0062,0x005C,0x0057,0x0052,0x004D,0x0049,0x0045,0x0041,0x003D,0x003A,
@@ -17,7 +22,12 @@ const uint16_t PROGMEM EFTWS[]={
 };
 
 //Voice frequency tuning word vs. MIDI note [0-127]
-const uint16_t PROGMEM PITCHS[]={
+#if defined(ESP32)
+const uint16_t PITCHS[]=
+#else
+const uint16_t PROGMEM PITCHS[]=
+#endif
+{
 0x001A,0x001C,0x001E,0x001F,0x0021,0x0023,0x0025,0x0028,0x002A,0x002D,0x002F,0x0032,0x0035,0x0038,0x003C,0x003F,
 0x0043,0x0047,0x004B,0x0050,0x0055,0x005A,0x005F,0x0065,0x006B,0x0071,0x0078,0x007F,0x0087,0x008F,0x0097,0x00A0,
 0x00AA,0x00B4,0x00BE,0x00CA,0x00D6,0x00E3,0x00F0,0x00FE,0x010E,0x011E,0x012F,0x0141,0x0154,0x0168,0x017D,0x0194,
@@ -28,7 +38,11 @@ const uint16_t PROGMEM PITCHS[]={
 0x4381,0x4785,0x4BC6,0x5047,0x550D,0x5A1C,0x5F78,0x6525,0x6B29,0x7188,0x7848,0x7F6F,0x8703,0x8F0A,0x978C,0xA08F,
 };
 
+#if defined(ESP32)
+const int8_t SinTable[]=
+#else
 const int8_t PROGMEM SinTable[]=
+#endif
 {
 	0,	//0
 	3,	//1
@@ -288,7 +302,11 @@ const int8_t PROGMEM SinTable[]=
 	-4,	//255
 };
 
+#if defined(ESP32)
+const int8_t TriangleTable[]=
+#else
 const int8_t PROGMEM TriangleTable[]=
+#endif
 {
 	0,	//0
 	1,	//1
@@ -548,7 +566,11 @@ const int8_t PROGMEM TriangleTable[]=
 	-2,	//255
 };
 
+#if defined(ESP32)
+const int8_t SquareTable[]=
+#else
 const int8_t PROGMEM  SquareTable[]=
+#endif
 {
 	127,	//0
 	127,	//1
@@ -807,7 +829,12 @@ const int8_t PROGMEM  SquareTable[]=
 	-125,	//254
 	-1,	//255
 };
+
+#if defined(ESP32)
+const int8_t SawTable[]=
+#else
 const int8_t PROGMEM SawTable[]=
+#endif
 {
 	127,	//0
 	127,	//1
@@ -1066,7 +1093,12 @@ const int8_t PROGMEM SawTable[]=
 	-125,	//254
 	-127,	//255
 };
+
+#if defined(ESP32)
+const int8_t RampTable[]=
+#else
 const int8_t PROGMEM RampTable[]=
+#endif
 {
 	-127,	//0
 	-126,	//1
@@ -1325,7 +1357,12 @@ const int8_t PROGMEM RampTable[]=
 	126,	//254
 	127,	//255
 };
+
+#if defined(ESP32)
+const int8_t NoiseTable[]=
+#else
 const int8_t PROGMEM NoiseTable[]=
+#endif
 {
 	-62,	//0
 	-72,	//1
@@ -1584,7 +1621,12 @@ const int8_t PROGMEM NoiseTable[]=
 	112,	//254
 	119,	//255
 };
+
+#if defined(ESP32)
+const uint8_t Env0[]=
+#else
 const uint8_t PROGMEM Env0[]=
+#endif
 {
 	255,	//0
 	254,	//1
@@ -1717,7 +1759,12 @@ const uint8_t PROGMEM Env0[]=
 	0,	//127
 	0,	//127
 };
+
+#if defined(ESP32)
+const uint8_t Env1[]=
+#else
 const uint8_t PROGMEM Env1[]=
+#endif
 {
 	255,	//0
 	242,	//1
@@ -1851,7 +1898,12 @@ const uint8_t PROGMEM Env1[]=
 	0,	//127
 	0,	//127
 };
+
+#if defined(ESP32)
+const uint8_t Env2[]=
+#else
 const uint8_t PROGMEM Env2[]=
+#endif
 {
 	255,	//0
 	254,	//1
@@ -1985,7 +2037,12 @@ const uint8_t PROGMEM Env2[]=
 	0,	//127
 	0,	//127
 };
+
+#if defined(ESP32)
+const uint8_t Env3[]=
+#else
 const uint8_t PROGMEM Env3[]=
+#endif
 {
 	255,	//0
 	250,	//1
