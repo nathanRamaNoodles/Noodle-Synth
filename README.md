@@ -1,5 +1,5 @@
 Modded:
- - reduced code size (480 bytes saved)
+ - reduced code size (480 bytes saved). Use a new function to compute a note and some minor optimization.
  - solved a bug with flat and sharp in the header. Octave was not checked and so, a note, whatever its octave got the flat or sharp 
 
 
