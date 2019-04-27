@@ -85,7 +85,7 @@ MusicWithoutDelay& MusicWithoutDelay:: newSong(const char *p) {
     once = false;
     switch (pgm_read_byte_near(mySong+loc)) {
       case 'd':
-      loc += 2;       // skip "b="
+      loc += 2;       // skip "d="     ========> MOD: silly error, it was a b :-P
       num = 0;
       while (isDigit(pgm_read_byte_near(mySong+loc)))
       {
@@ -112,20 +112,40 @@ MusicWithoutDelay& MusicWithoutDelay:: newSong(const char *p) {
       case 'f':
       loc += 2;       // skip "f="
       num = 0;
-      memset(autoFlat, 0, 5);
+      memset(autoFlat, 0, 10);                                // ========> MOD: 
       while (isAlpha(pgm_read_byte_near(mySong+loc)))
       {
-        autoFlat[num] = (char)pgm_read_byte_near(mySong+loc++);
+        autoFlat[num][0] = (char)pgm_read_byte_near(mySong+loc++);
+        scale = 1;                                            // ========> MOD: 
+        if (pgm_read_byte_near(mySong+loc) == '-')
+        {
+          loc++;
+          scale = -1;
+        }
+        if (isdigit(pgm_read_byte_near(mySong+loc)))
+        {
+          autoFlat[num][1] = scale * (pgm_read_byte_near(mySong+loc++) - '0');
+        }
         num++;
       }
       break;
       case 's':
       loc += 2;       // skip "s="
       num = 0;
-      memset(autoSharp, 0, 5);
+      memset(autoSharp, 0, 10);                               // ========> MOD: 
       while (isAlpha(pgm_read_byte_near(mySong+loc)))
       {
-        autoSharp[num] = (char)pgm_read_byte_near(mySong+loc++);
+        autoSharp[num][0] = (char)pgm_read_byte_near(mySong+loc++);
+        scale = 1;                                            // ========> MOD: 
+        if (pgm_read_byte_near(mySong+loc) == '-')
+        {
+          loc++;
+          scale = -1;
+        }
+        if (isdigit(pgm_read_byte_near(mySong+loc)))
+        {
+          autoSharp[num][1] = scale * (pgm_read_byte_near(mySong+loc++) - '0');
+        }
         num++;
       }
       break;
@@ -156,6 +176,140 @@ MusicWithoutDelay& MusicWithoutDelay:: newSong(const char *p) {
 //   Serial.println();
 //   Serial.print("Length: ");Serial.println(strlen_P(mySong));
 // }
+void MusicWithoutDelay :: _getCodeNote() {
+  while (isWhitespace(pgm_read_byte_near(mySong+loc))) {
+    loc++;
+  }
+  
+  // first, get note duration, if available
+  num = 0;
+  while (isdigit(pgm_read_byte_near(mySong+loc)))
+  {
+    num = (num * 10) + (pgm_read_byte_near(mySong+loc++) - '0');
+  }
+
+  if (!skip) {
+    if (num)duration = wholenote / num;
+    else {
+      duration = wholenote / default_dur;
+    }
+    
+    // now, get optional '.' dotted note
+    if (pgm_read_byte_near(mySong+loc) == '.')
+    {
+      duration += duration / 2;
+      loc++;
+    }
+  }
+  else
+    skip = false;
+
+  int set = 0;
+  if      (duration>=1000){
+    set=105;
+  }
+  else if (duration>=400){
+    set=87;
+  }
+  else if (duration>300){
+    set=82;
+  }
+  else if (duration>250){
+    set=78;
+  }
+  else if (duration>200){
+    set=73;
+  }
+  else {
+    set=55;
+  }
+  noodleSynth->setLength(myInstrument,set);
+
+  // now get the note
+  char alphaNote = pgm_read_byte_near(mySong+loc++);  // ========> MOD: 
+  note = 0;
+  switch (alphaNote)
+  {
+    case 'c':
+      note = 1;
+      break;
+    case 'd':
+      note = 3;
+      break;
+    case 'e':
+      note = 5;
+      break;
+    case 'f':
+      note = 6;
+      break;
+    case 'g':
+      note = 8;
+      break;
+    case 'a':
+      note = 10;
+      break;
+    case 'b':
+      note = 12;
+    break;
+  }                                                     // ========> MOD: end
+            
+  if (!skip) {
+    if (pgm_read_byte_near(mySong+loc) == '.')
+    {
+      duration += duration / 2;
+      loc++;
+    }
+  }
+  
+  // now, get optional '#' sharp and '_' flat
+  char flat_sharp = 0;                    // ========> MOD: 
+  if      (pgm_read_byte_near(mySong+loc) == '#')
+  {
+    flat_sharp++;
+    loc++;
+  }
+  else if (pgm_read_byte_near(mySong+loc) == '_')
+  {
+    flat_sharp--;
+    loc++;
+  }
+
+  // now, get octave
+  scale = 1;                              // ========> MOD: 
+  if (pgm_read_byte_near(mySong+loc) == '-')
+  {
+    loc++;
+    scale = -1;
+  }
+  if (isdigit(pgm_read_byte_near(mySong+loc)))
+  {
+    scale *= pgm_read_byte_near(mySong+loc++) - '0';
+    scale += default_oct;
+    if      (scale < 1) scale = 1;
+    else if (scale > 7) scale = 7;
+  }
+  else
+  {
+    scale = default_oct;
+  }
+
+  // and now, finish shap & flat
+  byte i = 5;
+  while (i--)
+  {
+    if      ((alphaNote == autoSharp[i][0]) && (scale - default_oct == autoSharp[i][1]))
+    {
+      flat_sharp++;
+      break;
+    }
+    else if ((alphaNote == autoFlat[i][0]) && (scale - default_oct == autoFlat[i][1]))
+    {
+      flat_sharp--;
+      break;
+    }
+  }
+  if (note) note += flat_sharp % 2;
+}
 MusicWithoutDelay&  MusicWithoutDelay:: update() {
   //Serial.print("Delayer: ");Serial.println(delayer);
   // format: d=N,o=N,b=NNN:
@@ -202,152 +356,13 @@ MusicWithoutDelay&  MusicWithoutDelay:: update() {
           {
             if (pgm_read_byte_near(mySong+loc) == ':')
             loc++;
+
+            _getCodeNote();
+            
             while (isWhitespace(pgm_read_byte_near(mySong+loc))) {
               loc++;
             }
-            // first, get note duration, if available
-            num = 0;
-            while (isdigit(pgm_read_byte_near(mySong+loc)))
-            {
-              num = (num * 10) + (pgm_read_byte_near(mySong+loc++) - '0');
-            }
-
-            if (!skip) {
-              if (num)duration = wholenote / num;
-              else {
-                duration = wholenote / default_dur;
-              }
-              // now, get optional '.' dotted note
-              if (pgm_read_byte_near(mySong+loc) == '.')
-              {
-                duration += duration / 2;
-                loc++;
-              }
-            }
-            else
-            skip = false;
-
-            int set = 0;
-            if(duration>=1000){
-              set=105;
-            }
-            else if(duration>=400){
-              set=87;
-            }
-            else if(duration>300){
-              set=82;
-            }
-            else if(duration>250){
-              set=78;
-            }
-            else if(duration>200){
-              set=73;
-            }
-            else{
-              set=55;
-            }
-            noodleSynth->setLength(myInstrument,set);
-
-            // now get the note
-            note = 0;
-            for (int i = 0; i < 5; i++) {
-              if (pgm_read_byte_near(mySong+loc) == autoFlat[i]) {
-                note--;
-                break;
-              }
-              else if (pgm_read_byte_near(mySong+loc) == autoSharp[i]) {
-                note++;
-                break;
-              }
-            }
-            switch (pgm_read_byte_near(mySong+loc))
-            {
-              case 'c':
-              note += 1;
-              break;
-              case 'd':
-              note += 3;
-              break;
-              case 'e':
-              note += 5;
-              break;
-              case 'f':
-              note += 6;
-              break;
-              case 'g':
-              note += 8;
-              break;
-              case 'a':
-              note += 10;
-              break;
-              case 'b':
-              note += 12;
-              break;
-              case 'p':
-              default:
-              note = 0;
-            }
-            loc++;
-            if (!skip) {
-              if (pgm_read_byte_near(mySong+loc) == '.')
-              {
-                duration += duration / 2;
-                loc++;
-              }
-            }
-            // now, get optional '#' sharp
-            if (pgm_read_byte_near(mySong+loc) == '#')
-            {
-              for (int i = 0; i < 5; i++) {
-                if (pgm_read_byte_near(mySong+loc-1) == autoSharp[i]) {
-                  note--;
-                  break;
-                }
-              }
-              note++;
-              loc++;
-            }
-            else if (pgm_read_byte_near(mySong+loc) == '_') //for the flats
-            {
-              for (int i = 0; i < 5; i++) {
-                if (pgm_read_byte_near(mySong+loc-1) == autoFlat[i]) {
-                  note++;
-                  break;
-                }
-              }
-              note--;
-              loc++;
-            }
-            if (pgm_read_byte_near(mySong+loc) == '-')
-            {
-              loc++;
-              if (isDigit(pgm_read_byte_near(mySong+loc))) {
-                scale = pgm_read_byte_near(mySong+loc) - '0';
-                scale = default_oct - scale;
-                if (scale < 1)
-                scale = 1;
-                loc++;
-              }
-              else {
-                scale = default_oct;
-              }
-            }
-            // now, get scale
-            else if (isdigit(pgm_read_byte_near(mySong+loc)))
-            {
-              scale = pgm_read_byte_near(mySong+loc) - '0';
-              scale = default_oct + scale;
-              if (scale > 7)
-              scale = 7;
-              loc++;
-            }
-            else
-            {
-              scale = default_oct;
-            }
-            while (isWhitespace(pgm_read_byte_near(mySong+loc))) {
-              loc++;
-            }
+            
             delayer = true;
             if(!sustainControl)
             setSustain(SUSTAIN);
@@ -409,147 +424,16 @@ MusicWithoutDelay&  MusicWithoutDelay:: update() {
           start = false;
           if (loc > pLoc)
           {
-            note = 0;
-            while (isWhitespace(pgm_read_byte_near(mySong+loc))) {
-              loc--;
-            }
-            // now, get scale
-            if (isdigit(pgm_read_byte_near(mySong+loc)))
+            while (true)
             {
-              scale = pgm_read_byte_near(mySong+loc) - '0';
-              if (pgm_read_byte_near(mySong+loc-1) == '-') {
-                loc--;
-                scale *= -1;
-              }
-              scale = default_oct + scale;
-              if (scale > 7)
-              scale = 7;
-              else if (scale < 1)
-              scale = 1;
-              loc--;
+              char alpha = pgm_read_byte_near(mySong+loc);
+              if (alpha == ':' || alpha == ',' || alpha == '+') break;
+              loc--; 
             }
-            else
-            {
-              scale = default_oct;
-            }
-
-
-            for (int i = 0; i < 5; i++) {
-              if (pgm_read_byte_near(mySong+loc) == autoFlat[i]) {
-                note--;
-                break;
-              }
-              else if (pgm_read_byte_near(mySong+loc) == autoSharp[i]) {
-                note++;
-                break;
-              }
-            }
-            // now, get optional '#' sharp
-            if (pgm_read_byte_near(mySong+loc) == '#')
-            {
-              for (int i = 0; i < 5; i++) {
-                if (pgm_read_byte_near(mySong+loc+1) == autoSharp[i]) {
-                  note--;
-                  break;
-                }
-              }
-              note++;
-              loc--;
-            }
-            else if (pgm_read_byte_near(mySong+loc) == '_')
-            {
-              for (int i = 0; i < 5; i++) {
-                if (pgm_read_byte_near(mySong+loc+1) == autoFlat[i]) {
-                  note++;
-                  break;
-                }
-              }
-              note--;
-              loc--;
-            }
-
-            switch (pgm_read_byte_near(mySong+loc))
-            {
-              case 'c':
-              note += 1;
-              break;
-              case 'd':
-              note += 3;
-              break;
-              case 'e':
-              note += 5;
-              break;
-              case 'f':
-              note += 6;
-              break;
-              case 'g':
-              note += 8;
-              break;
-              case 'a':
-              note += 10;
-              break;
-              case 'b':
-              note += 12;
-              break;
-              case 'p':
-              default:
-              note = 0;
-
-            }
-            loc--;
-            bool period = false;
-            // now, get optional '.' dotted note
-            if (!skip) {
-              if (pgm_read_byte_near(mySong+loc) == '.')
-              {
-                period = true;
-                loc--;
-              }
-              // first, get note duration, if available
-              num = 0;
-              if (isDigit(pgm_read_byte_near(mySong+loc)))
-              {
-                int i = 0;
-                while (isdigit(pgm_read_byte_near(mySong+loc)))
-                {
-                  num = ((pgm_read_byte_near(mySong+loc) - '0') * powers[i]) + num ;
-                  loc--;
-                  i++;
-                }
-              }
-              if (num)duration = wholenote / num;
-              else duration = wholenote / default_dur;
-              if (period)
-              duration += duration / 2;
-            }
-            else
-            skip = false;
-
-            int set = 0;
-            if(duration>=1000){
-              set=105;
-            }
-            else if(duration>=400){
-              set=87;
-            }
-            else if(duration>300){
-              set=82;
-            }
-            else if(duration>250){
-              set=78;
-            }
-            else if(duration>200){
-              set=73;
-            }
-            else{
-              set=55;
-            }
-            noodleSynth->setLength(myInstrument,set);
-
-
-            while (isWhitespace(pgm_read_byte_near(mySong+loc))) {
-              loc--;
-            }
+            uint16_t cur_loc = loc;
+            _getCodeNote();
+            loc = cur_loc;
+            
             delayer = true;
             if(!sustainControl)
             setSustain(SUSTAIN);
