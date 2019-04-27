@@ -166,6 +166,7 @@ public:
   bool isSingleNote();
 
 private:
+  void   _getCodeNote();
   double skipSolver();
   uint32_t pMillis;      //Yup...Thats a 'long' list of variables. Pun intended :D
   uint32_t oneMillis;
@@ -189,9 +190,9 @@ private:
   uint8_t mRepeat;
   int skipCount;
   bool resume, skip, single, reversed, wasPlaying, wasEnd, oneTime,delayer, rest, slur, start, finish, beat, isMute, sustainControl, flagRepeat, playSingleNote;
-  char autoFlat[5];  //you can only have 5 of the black keys ;)
-  char autoSharp[5];
-  char songName[15];  //make this smaller to get more SRAM
+  char autoFlat[5][2];  //you can only have 5 of the black keys ;)            ========> MOD: must get the octave
+  char autoSharp[5][2]; //                                                    ========> MOD: must get the octave
+  char songName[15];    //make this smaller to get more SRAM
   const char *mySong;
   static synthEngine *noodleSynth;
 };
