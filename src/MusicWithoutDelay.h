@@ -1,37 +1,40 @@
 /*
-MusicWithoutDelay.h - Library for playing music at multiple pins without Using Delay. Also uses the Tone library.
-MusicWithoutDelay Created by Nathan Ramanathan(nathan6ramanathan@gmail.com), March 21, 2018
+  MusicWithoutDelay.h - Library for playing music at multiple pins without Using Delay. Also uses the Tone library.
+  MusicWithoutDelay Created by Nathan Ramanathan(nathan6ramanathan@gmail.com), March 21, 2018
 
-MIT License
+  MIT License
 
-Copyright (c) 2018 nathanRamaNoodles
+  Copyright (c) 2018 nathanRamaNoodles
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files (the "Software"), to deal
+  in the Software without restriction, including without limitation the rights
+  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+  copies of the Software, and to permit persons to whom the Software is
+  furnished to do so, subject to the following conditions:
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+  The above copyright notice and this permission notice shall be included in all
+  copies or substantial portions of the Software.
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+  SOFTWARE.
 */
 
 #ifndef MusicWithoutDelay_h
 #define MusicWithoutDelay_h
 
 #include "Arduino.h"
-#include "synthEngine.h"
+#include "synth.h" // synth engine
+static synth edgar;
 
+#define twelveRoot 1.059463094359
 
+#define NOTE_B0  23
 #define NOTE_C1  24
 #define NOTE_CS1 25
 #define NOTE_D1  26
@@ -65,7 +68,7 @@ SOFTWARE.
 #define NOTE_FS3 54
 #define NOTE_G3  55
 #define NOTE_GS3 56
-#define NOTE_A3  57 //A3
+#define NOTE_A3  57
 #define NOTE_AS3 58
 #define NOTE_B3  59
 #define NOTE_C4  60  //middle C
@@ -77,7 +80,7 @@ SOFTWARE.
 #define NOTE_FS4 66
 #define NOTE_G4  67
 #define NOTE_GS4 68
-#define NOTE_A4  69  //A4 440 Hz
+#define NOTE_A4  69
 #define NOTE_AS4 70
 #define NOTE_B4  71
 #define NOTE_C5  72
@@ -125,75 +128,78 @@ SOFTWARE.
 
 class MusicWithoutDelay
 {
-public:
-  MusicWithoutDelay(const char *p);
-  MusicWithoutDelay();
-  MusicWithoutDelay& begin(int mode, int waveForm, int envelope, int mod );
-  MusicWithoutDelay& begin(int waveForm, int envelope, int mod);
-  MusicWithoutDelay& update();
-  MusicWithoutDelay& play();
-  MusicWithoutDelay& play(int repeat);
-  MusicWithoutDelay& mute(bool m);
-  MusicWithoutDelay& pause(bool p);
-  MusicWithoutDelay& newSong(const char *p);
-  MusicWithoutDelay& setBPM(int tempo);
-  MusicWithoutDelay& setMod(int percent);
-  MusicWithoutDelay& setVolume(int volume);
-  MusicWithoutDelay& setSustain(int v);
-  MusicWithoutDelay& setWave(int waveShape);
-  MusicWithoutDelay& setFrequency(float freq);
-  MusicWithoutDelay& setOctave(int oct);
-  MusicWithoutDelay& reverse(bool r);
-  MusicWithoutDelay& skipTo(long index);
-  MusicWithoutDelay& overrideSustain(bool v);
-  // void readIt();
-  static float getNoteAsFrequency(int n);
-  static void setEngine(synthEngine *engine);
+  public:
+    MusicWithoutDelay(const char *p);
+    MusicWithoutDelay();
+    
+    MusicWithoutDelay&  begin(int mode, int waveForm, int envelope, int mod );
+    MusicWithoutDelay&  begin(int waveForm, int envelope, int mod);
+    MusicWithoutDelay&  update();
+    MusicWithoutDelay&  play();
+    MusicWithoutDelay&  play(int repeat);
+    MusicWithoutDelay&  mute(bool m);
+    MusicWithoutDelay&  pause(bool p);
+    MusicWithoutDelay&  newSong(const char *p);
+    MusicWithoutDelay&  setBPM(int tempo);
+    MusicWithoutDelay&  setMod(int percent);
+    MusicWithoutDelay&  setVolume(int volume);
+    MusicWithoutDelay&  setSustain(int v);
+    MusicWithoutDelay&  setWave(int waveShape);
+    MusicWithoutDelay&  setFrequency(float freq);
+    MusicWithoutDelay&  setOctave(int oct);
+    MusicWithoutDelay&  reverse(bool r);
+    MusicWithoutDelay&  skipTo(long index);
+    MusicWithoutDelay&  overrideSustain(bool v);
+    // void readIt();
+    static float        getNoteAsFrequency(int n);
 
-  long getTotalTime();
-  long getCurrentTime();
-  int getBPM();
-  int getOctave();
-  char* getName();
-  bool isRest();
-  bool isMuted();
-  bool isStart();
-  bool isEnd();
-  bool isPaused();
-  bool isNote();
-  bool isBackwards();
-  bool isSustainOverrided();
-  bool isSingleNote();
+    long                getTotalTime();
+    long                getCurrentTime();
+    int                 getBPM();
+    int                 getOctave();
+    char*               getName();
+    bool                isRest();
+    bool                isMuted();
+    bool                isStart();
+    bool                isEnd();
+    bool                isPaused();
+    bool                isNote();
+    bool                isBackwards();
+    bool                isSustainOverrided();
+    bool                isSingleNote();
 
-private:
-  void   _getCodeNote();
-  double skipSolver();
-  uint32_t pMillis;      //Yup...Thats a 'long' list of variables. Pun intended :D
-  uint32_t oneMillis;
-  uint32_t timeBar;
-  uint32_t placeHolder1;
-  uint32_t placeHolder2;
-  uint32_t totalTime;
-  uint32_t currentTime;
-  uint32_t duration;
-  uint16_t wholenote;
-  uint16_t loc;
-  uint16_t pLoc;
-  uint16_t bpm;
-  uint8_t default_oct;
-  uint8_t default_dur;
-  uint8_t num;
-  uint8_t slurCount;
-  uint8_t note;
-  uint8_t scale;
-  uint8_t myInstrument;
-  uint8_t mRepeat;
-  int skipCount;
-  bool resume, skip, single, reversed, wasPlaying, wasEnd, oneTime,delayer, rest, slur, start, finish, beat, isMute, sustainControl, flagRepeat, playSingleNote;
-  char autoFlat[5][2];  //you can only have 5 of the black keys ;)            ========> MOD: must get the octave
-  char autoSharp[5][2]; //                                                    ========> MOD: must get the octave
-  char songName[15];    //make this smaller to get more SRAM
-  const char *mySong;
-  static synthEngine *noodleSynth;
+  private:
+    void                _getCodeNote();
+    void                _setCodeNote(char increment);
+    double              _skipSolver();
+    uint32_t            pMillis;      //Yup...Thats a 'long' list of variables. Pun intended :D
+    uint32_t            oneMillis;
+    uint32_t            timeBar;
+    uint32_t            placeHolder1;
+    uint32_t            placeHolder2;
+    uint32_t            totalTime;
+    uint32_t            currentTime;
+    uint32_t            duration;
+    uint16_t            wholenote;
+    uint16_t            loc;
+    uint16_t            pLoc;
+    uint16_t            bpm;
+    uint8_t             default_oct;
+    uint8_t             default_dur;
+    uint8_t             num;
+    uint8_t             slurCount;
+    uint8_t             note;
+    uint8_t             myInstrument;
+    uint8_t             mRepeat;
+    int8_t              scale;
+    int                 skipCount;
+    bool                resume, skip, single, reversed, wasPlaying, wasEnd, oneTime, delayer, rest, slur, start, finish, beat, isMute, sustainControl, flagRepeat, playSingleNote;
+    int8_t              autoFlat[5];   // you can only have 5 of the black keys ;)
+    int8_t              autoSharp[5];  //                                         
+#define SONG_NAME_LENGTH  1               // 1~15
+    char                songName[SONG_NAME_LENGTH];     // make this smaller to get more SRAM
+    const char*         mySong;
 };
+
 #endif
+
