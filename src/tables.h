@@ -55,7 +55,6 @@ const int8_t PROGMEM SinTable[] = {
 //             \  |
 // -128          \|
 
-
 // RampTable made by calcul  
 //  127          /|
 //  0___       /  |  
