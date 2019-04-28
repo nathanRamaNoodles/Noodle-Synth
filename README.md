@@ -1,12 +1,14 @@
 Modded:
- - reduced code size (480 bytes saved). Use a new function to compute a note and some minor optimization.
- - solved a bug with flat and sharp in the header. Octave was not checked and so, a note, whatever its octave got the flat or sharp 
+ - reduced code size (> 800 bytes saved). Use a new function to compute a note and some minor optimization.
+ - reduced table arrays, especially sinusoid one, we only need 1/4 of a cycle long.
+ - solved a bug with flat and sharp in the header. Bad reset for the arrays, calling for a new song may force global sharp or flat note.
+
+I first worked on the v4.0.0, but this version is bigger than the v3.5.14 and I care for RAM too much, so... ;). However the modification made for the v3.5.14 can easy be transposed to the v4.0.0.
 
 
 
 
-
-# MusicWithoutDelay Library(v4.0.0)
+# MusicWithoutDelay Library(v3.5.1)
 
 [![paypal](https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=HN6V9GRCU4L6U)
 
