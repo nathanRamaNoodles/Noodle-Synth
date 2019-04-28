@@ -1,7 +1,7 @@
 Modded:
  - reduced code size (actually 2606 bytes saved!!!). Use a new function to compute a note and some minor optimization.
  - reduced table arrays, especially sinusoid one, we only need 1/4 of a cycle long.
- - solved a bug with flat and sharp in the header. Bad reset for the arrays, calling for a new song may force global sharp or flat note.
+ - solved a bug with flat and sharp in the header. Bad reset for the arrays, calling for a new song may force global sharp or flat note from precedant song.
 
 I first worked on the v4.0.0, but this version is bigger than the v3.5.14 and I care for RAM too much, so... ;). However the modification made for the v3.5.14 can easy be transposed to the v4.0.0.
 
