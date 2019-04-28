@@ -51,15 +51,15 @@ const int8_t PROGMEM SinTable[] = {
 
 // SawTable made by calcul  
 //  127   |\     
-//  0___  | \    
-//           \ |
-// -128       \|
+//  0___  |  \    
+//             \  |
+// -128          \|
 
 
 // RampTable made by calcul  
-//  127       /|
-//  0___     / |  
-//        | /
+//  127          /|
+//  0___       /  |  
+//        |  /
 // -128   |/
 
 // 1/4 NoiseTable, keep missing parts with symetries (same than sinusoid ones)
