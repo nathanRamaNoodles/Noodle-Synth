@@ -1,5 +1,5 @@
 Modded:
- - reduced code size (> 800 bytes saved). Use a new function to compute a note and some minor optimization.
+ - reduced code size (actually 2606 bytes saved!!!). Use a new function to compute a note and some minor optimization.
  - reduced table arrays, especially sinusoid one, we only need 1/4 of a cycle long.
  - solved a bug with flat and sharp in the header. Bad reset for the arrays, calling for a new song may force global sharp or flat note.
 
