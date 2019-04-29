@@ -46,7 +46,7 @@
 #endif
 
 // macros
-#define   SET(x,y) (x |=(1<<y))            //-Bit set/clear macros
+#define   SET(x,y) (x |=(1<<y))		        //-Bit set/clear macros
 #define   CLR(x,y) (x &= (~(1<<y)))       // |
 #define   CHK(x,y) (x & (1<<y))           // |
 #define   TOG(x,y) (x^=(1<<y))            //-+
