@@ -37,7 +37,7 @@ static const int  notes[]           = {
   NOTE_C6, NOTE_CS6, NOTE_D6, NOTE_DS6, NOTE_E6, NOTE_F6, NOTE_FS6, NOTE_G6, NOTE_GS6, NOTE_A6, NOTE_AS6, NOTE_B6,
   NOTE_C7, NOTE_CS7, NOTE_D7, NOTE_DS7, NOTE_E7, NOTE_F7, NOTE_FS7, NOTE_G7, NOTE_GS7, NOTE_A7, NOTE_AS7, NOTE_B7
 };
-static const int  powers[]          = {1, 10, 100, 1000};
+
 double            dur               = 0;
 bool              firstTime;
 
@@ -46,7 +46,7 @@ bool              firstTime;
 MusicWithoutDelay::MusicWithoutDelay(const char *p)
 {
   /*
-  default_dur     = 1;  //eqivalent to a wholenote
+  default_dur     = 1;  //eqivalent to a wholenote    =====> placed in 'newSong(const char *p)'
   default_oct     = 4;
   bpm             = 100;
   wholenote       = (60 * 1000L / bpm) * 4;
@@ -69,7 +69,7 @@ MusicWithoutDelay::MusicWithoutDelay()
 
 
 
-MusicWithoutDelay& MusicWithoutDelay::begin(int mode, int waveForm, int envelope, int mod)
+MusicWithoutDelay& MusicWithoutDelay::begin(byte mode, byte waveForm, byte envelope, int mod)
 {
   edgar.begin(myInstrument, mode);
   edgar.setupVoice(myInstrument, waveForm, 60, envelope, 70, mod + 64);
@@ -78,7 +78,7 @@ MusicWithoutDelay& MusicWithoutDelay::begin(int mode, int waveForm, int envelope
 
 
 
-MusicWithoutDelay& MusicWithoutDelay::begin(int waveForm, int envelope, int mod)
+MusicWithoutDelay& MusicWithoutDelay::begin(byte waveForm, byte envelope, int mod)
 {
   if (myInstrument < 1) edgar.begin(myInstrument, CHA); //default channel
   else                  edgar.begin(myInstrument);
@@ -90,7 +90,7 @@ MusicWithoutDelay& MusicWithoutDelay::begin(int waveForm, int envelope, int mod)
 
 MusicWithoutDelay& MusicWithoutDelay::newSong(const char *p)
 {
-  default_dur     = 1;  //eqivalent to a wholenote
+  default_dur     = 1;  //equivalent to a wholenote
   default_oct     = 4;
   bpm             = 100;
   wholenote       = (60 * 1000L / bpm) * 4;
@@ -99,10 +99,11 @@ MusicWithoutDelay& MusicWithoutDelay::newSong(const char *p)
   start           = true;
   mySong          = p;
   loc             = 0;
+  pMillis         = 0;
+  slurCount       = 0;
   memset(songName, 0, SONG_NAME_LENGTH);
   memset(autoFlat, 0, 5);
   memset(autoSharp, 0, 5);
-  slurCount       = 0;
   
 
   // get the name
@@ -136,7 +137,7 @@ MusicWithoutDelay& MusicWithoutDelay::newSong(const char *p)
         if (num > 0) default_dur = num;
         break;
       case 'o':
-        loc += 2;        // skip "o="   default octave
+        loc += 2;       // skip "o="    default octave
         num  = pgm_read_byte_near(mySong + loc++) - '0';
         if (num >= 1 && num <= 7) default_oct = num;
         break;
@@ -147,7 +148,7 @@ MusicWithoutDelay& MusicWithoutDelay::newSong(const char *p)
         {
           num = (num * 10) + (pgm_read_byte_near(mySong + loc++) - '0');
         }
-        bpm  = num;
+        bpm       = num;
         wholenote = (60 * 1000L / bpm) * 4;
         break;
       case 'f':
@@ -168,7 +169,10 @@ MusicWithoutDelay& MusicWithoutDelay::newSong(const char *p)
         break;
     }
   }
-  pLoc      = loc;
+  
+  loc++;    //skip semicolon
+  
+  pLoc      = loc;                  // this will point now at the 1st note
   loc       = strlen_P(mySong);
   totalTime = 0;
   skipCount = pLoc;
@@ -211,8 +215,8 @@ void MusicWithoutDelay::_getCodeNote()
     num = (num * 10) + (pgm_read_byte_near(mySong + loc++) - '0');
   }
 
-  if (!skip)
-  {
+  //if (!skip)
+  //{
     if (num)    duration = wholenote / num;
     else        duration = wholenote / default_dur;
 
@@ -222,11 +226,11 @@ void MusicWithoutDelay::_getCodeNote()
       duration += duration / 2;
       loc++;
     }
-  }
-  else
-  {
-    skip = false;
-  }
+  //}
+  //else
+  //{
+  //  skip = false;
+  //}
 
   int set = 0;
   if      (duration >= 1000)  set = 105;
@@ -265,6 +269,7 @@ void MusicWithoutDelay::_getCodeNote()
       break;
   }                                                     // ========> MOD: end
 
+  /*
   if (!skip)
   {
     if (pgm_read_byte_near(mySong + loc) == '.')
@@ -273,6 +278,7 @@ void MusicWithoutDelay::_getCodeNote()
       loc++;
     }
   }
+  //*/
 
   // now, get optional and default '#' sharp and '_' flat
   int8_t flat_sharp = 0;                    // ========> MOD:
@@ -325,14 +331,14 @@ void MusicWithoutDelay::_getCodeNote()
   }
 }
 
-void MusicWithoutDelay::_setCodeNote(char increment)
+void MusicWithoutDelay::_setCodeNote()
 {
   delayer = true;
   if (!sustainControl) setSustain(SUSTAIN);
 
   if      (pgm_read_byte_near(mySong + loc) == ',')
   {
-    loc += increment;     // skip comma for next note (or we may be at the end)
+    //loc += increment;     // skip comma for next note (or we may be at the end)
     if (slurCount != 0)
     {
       beat      = true;
@@ -343,7 +349,7 @@ void MusicWithoutDelay::_setCodeNote(char increment)
   }
   else if (pgm_read_byte_near(mySong + loc) == '+')
   {
-    loc += increment;
+    //loc += increment;
     beat = ((slurCount == 0) ? false : true);
     slurCount++;
     slur = true;
@@ -363,6 +369,13 @@ void MusicWithoutDelay::_setCodeNote(char increment)
   {
     rest = true;
   }
+}
+
+bool MusicWithoutDelay::_isStartNote(uint16_t pointer)
+{
+  char test = pgm_read_byte_near(mySong + pointer);
+  if (test != ',' && test != '+' && test != ':') return false;
+  return true;
 }
 
 MusicWithoutDelay&  MusicWithoutDelay::update()
@@ -402,8 +415,6 @@ MusicWithoutDelay&  MusicWithoutDelay::update()
       {
         if (!reversed)
         {
-          //Serial.print("Play: ");Serial.println(loc);
-          
           // ====== now begin note loop
           if ((finish && !start) || start)
           {
@@ -416,12 +427,13 @@ MusicWithoutDelay&  MusicWithoutDelay::update()
           
           if (loc < strlen_P(mySong))
           {
-            if (pgm_read_byte_near(mySong + loc) == ':') loc++;
+            //if (pgm_read_byte_near(mySong + loc) == ':') loc++; /// no need this, loc now always point at the begining of the note
 
             _getCodeNote();
             while (isWhitespace(pgm_read_byte_near(mySong + loc))) loc++;
 
-            _setCodeNote(1);
+            _setCodeNote();
+            loc++;                    // skip comma or + for next note (or we may be at the end)
             
             oneMillis    = cM;
             pMillis      = cM;
@@ -445,24 +457,26 @@ MusicWithoutDelay&  MusicWithoutDelay::update()
           // now begin the note reversed loop
           if ((!finish && start) || finish)
           {
-            loc         = strlen_P(mySong) - 1;
+            loc         = strlen_P(mySong) - 1;     // !!!!!!!!!!!!!!!!!! must point to beginin of note
+            while (!_isStartNote(loc)) loc--;
+            loc++;                  // skip delimiter
             currentTime = totalTime;
             finish      = false;
           }
           start = false;
+          
           if (loc > pLoc)
           {
-            while (true)
-            {
-              char alpha = pgm_read_byte_near(mySong + loc);
-              if (alpha == ':' || alpha == ',' || alpha == '+') break;
-              loc--;
-            }
-            uint16_t cur_loc = loc;
-            _getCodeNote();
-            loc = cur_loc;
+            loc -= 2;               // skip at the end of precedent note
 
-            _setCodeNote(-1);
+            while (!_isStartNote(loc)) loc--;       // look for the start of precedent note
+            loc++;                  // skip delimiter
+            
+            uint16_t cur_loc = loc; // point at the start of precedent note
+            _getCodeNote();
+            loc = cur_loc - 1;      // point at ',' or '+' from precedent note
+
+            _setCodeNote();
             
             oneMillis    = cM;
             pMillis      = cM;
@@ -553,7 +567,7 @@ char* MusicWithoutDelay::getName()
 
 long MusicWithoutDelay::getTotalTime()
 {
-  return totalTime; //  returns time in milliseconds
+  return totalTime;   //  returns time in milliseconds
 }
 
 
@@ -572,7 +586,7 @@ int MusicWithoutDelay::getBPM()
 
 
 
-int MusicWithoutDelay::getOctave()
+byte MusicWithoutDelay::getOctave()
 {
   return default_oct;
 }
@@ -588,7 +602,7 @@ MusicWithoutDelay& MusicWithoutDelay::setBPM(int tempo)
 
 
 
-MusicWithoutDelay& MusicWithoutDelay :: setOctave(int oct)
+MusicWithoutDelay& MusicWithoutDelay::setOctave(byte oct)
 {
   if (oct >= 1 && oct <= 7) default_oct = oct;
   return *this;
@@ -596,7 +610,7 @@ MusicWithoutDelay& MusicWithoutDelay :: setOctave(int oct)
 
 
 
-MusicWithoutDelay& MusicWithoutDelay :: pause(bool p)
+MusicWithoutDelay& MusicWithoutDelay::pause(bool p)
 {
   resume = p;
   if (start || finish || skip)
@@ -614,49 +628,25 @@ MusicWithoutDelay& MusicWithoutDelay :: pause(bool p)
 
 double MusicWithoutDelay::_skipSolver()
 {
-  num = 0;
+  while (isWhitespace(pgm_read_byte_near(mySong + skipCount))) skipCount++;
+  
+  num  = 0;
+  while (isDigit(pgm_read_byte_near(mySong + loc)))
+  {
+    num = (num * 10) + (pgm_read_byte_near(mySong + loc++) - '0');
+  }
+  
   bool period = false;
-  while (!isAlpha(pgm_read_byte_near(mySong + skipCount)))
-  {
-    if (pgm_read_byte_near(mySong + skipCount) == '.')  period = true;
-    skipCount++;
-  }
+  if (pgm_read_byte_near(mySong + skipCount) == '.')  period = true;
 
-  //we are on a letter note
-  int back = 0; //keep track how far away from letter note
-  while (!isDigit(pgm_read_byte_near(mySong + skipCount))) //stop on nearest number to the left
-  {
-    char compare = pgm_read_byte_near(mySong + skipCount);
-    if (compare == ',' || compare == '+' || compare == ':') break;
-    skipCount--;
-    back++;
-  }
+  while (!_isStartNote(skipCount) && skipCount < strlen_P(mySong)) skipCount++;
+  skipCount++;    // skip delimiter
+  
+  if (num)    dur = (wholenote / num);
+  else        dur = (wholenote / default_dur);
 
-  //we are on a number
-  int j = 0;
-  while (isdigit(pgm_read_byte_near(mySong + skipCount))) //decrypt number backwards
-  {
-    num = ((pgm_read_byte_near(mySong + skipCount--) - '0') * powers[j]) + num ;
-    back++;
-    j++;
-  }
-  skipCount += back; //set skipCount to the letter note
-  while (pgm_read_byte_near(mySong + skipCount) != ','
-         && pgm_read_byte_near(mySong + skipCount) != '+'
-         && pgm_read_byte_near(mySong + skipCount) != strlen_P(mySong))
-    skipCount++;
-  dur = 0;
-  //Serial.print(num);
-
-  if (num) dur = (wholenote / num);
-  else     dur = (wholenote / default_dur);
-
-  if (period)
-  {
-    dur += dur / 2;
-    //Serial.print(".");
-  }
-  //Serial.println();
+  if (period) dur += dur / 2;
+  
   return dur;
 }
 
@@ -665,44 +655,48 @@ double MusicWithoutDelay::_skipSolver()
 MusicWithoutDelay& MusicWithoutDelay::skipTo(long index)
 {
   timeBar   = 0;
-  int n     = 0;
-  skipCount = pLoc;
-  while (((unsigned)skipCount) < strlen_P(mySong))
-  {
-    if (timeBar < ((unsigned)index))
-    {
-      n        = skipCount;
-      timeBar += _skipSolver();  //adds time
-    }
-    else
-    {
-      while (pgm_read_byte_near(mySong + n) != ','
-             && pgm_read_byte_near(mySong + n) != '+'
-             && pgm_read_byte_near(mySong + n) != ':' )
-        n--;
-      n++;
-      break;
-    }
-  }
+  //int n     = 0;
+  //skipCount = pLoc;
   
-  if (((unsigned)index) >= totalTime || index <= 0)
+  if (unsigned(index) >= totalTime || index <= 0)
   {
-    n = 0;
-    if (start) start  = false;
-    else       finish = true;
+    //n = 0;
+    if (start)      start   = false;
+    else            finish  = true;
     
-    if (index <= 0) index = 0;
-    else            index = totalTime;
+    if (index <= 0) index   = 0;
+    else            index   = totalTime;
+
+    loc     = pLoc;
+  }
+  else
+  {
+    skipCount = pLoc;
+    while (skipCount < strlen_P(mySong))
+    {
+      //n        = skipCount;
+      timeBar += _skipSolver();  //adds time
+        
+      if (timeBar >= unsigned(index))   // reached time, now, point to the beginin of the note
+      {
+        skipCount -= 2;   // skip delimiter
+        while (!_isStartNote(skipCount)) skipCount--;
+        skipCount++;      // skip delimiter
+        
+        loc = skipCount;
+        break;
+      }
+    }
   }
   
-  if (n != 0) skip = true;
-  else        skip = false;
+  if (timeBar)  skip = true;
+  else          skip = false;
 
-  loc = n;
   if (reversed) duration = index - (timeBar - dur);
   else          duration = timeBar - index;
   currentTime = index;
   delayer     = false;
+  
   return *this;
 }
 
@@ -710,8 +704,8 @@ MusicWithoutDelay& MusicWithoutDelay::skipTo(long index)
 
 bool MusicWithoutDelay::isStart()
 {
-  if (start && !resume) return true;
-  else                  return false;
+  if (start && !resume)  return true;
+  else                   return false;
 }
 
 
@@ -743,6 +737,8 @@ bool MusicWithoutDelay::isNote()
   return beat;
 }
 
+
+
 bool MusicWithoutDelay::isSingleNote()
 {
   return playSingleNote;
@@ -765,7 +761,7 @@ MusicWithoutDelay& MusicWithoutDelay::reverse(bool r)
 
 
 
-MusicWithoutDelay& MusicWithoutDelay:: mute(bool m)
+MusicWithoutDelay& MusicWithoutDelay::mute(bool m)
 {
   isMute = m;
   return *this;
@@ -786,7 +782,7 @@ MusicWithoutDelay& MusicWithoutDelay::play(int i)
 {
   play();
   flagRepeat = true;
-  mRepeat = (i < 1) ? 2 : i + 1;
+  mRepeat    = (i < 1) ? 2 : i + 1;
   return *this;
 }
 
@@ -799,9 +795,17 @@ float MusicWithoutDelay::getNoteAsFrequency(int n)
 
 
 
-MusicWithoutDelay& MusicWithoutDelay::setWave( int waveShape)
+MusicWithoutDelay& MusicWithoutDelay::setWave(byte wave)
 {
-  edgar.setWave( myInstrument, waveShape);
+  edgar.setWave(myInstrument, wave);
+  return *this;
+}
+
+
+
+MusicWithoutDelay&  MusicWithoutDelay::setEnvelope(byte env)
+{
+  edgar.setEnvelope(myInstrument, env);
   return *this;
 }
 
