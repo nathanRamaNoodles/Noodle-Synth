@@ -16,7 +16,7 @@
 //end of MaxVoice settings
 
 
-static unsigned int  PCW[maxVOICES];        //-Wave phase accumolators
+static unsigned int  PCW[maxVOICES];		  	//-Wave phase accumolators
 static unsigned int  FTW[maxVOICES];        //-Wave frequency tuning words
 static unsigned char AMP[maxVOICES];        //-Wave amplitudes [0-255]
 static unsigned int  PITCH[maxVOICES];      //-Voice pitch
@@ -141,10 +141,10 @@ int8_t _getWaveValue(uint8_t voice, uint8_t value)
     case NOISE:       //  xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
       pWaveTable = (unsigned int)NoiseTable;  
     case SINE:        // 0        127         0         -127        0
-      if (!pWaveTable) pWaveTable = (unsigned int)SinTable;  
+      if (!pWaveTable) pWaveTable = (unsigned int)SinTable;
       r       = value % 64;
       value  /= 64;
-      if (value && value != 2)  r = 64 - r;
+      if (value && value != 2)  r = 63 - r;
       r = (signed char)pgm_read_byte(pWaveTable + r);
       if (         value >  1)  r = -r;
       return r;
@@ -263,6 +263,7 @@ void        ICACHE_RAM_ATTR onTimerISR()
     for (uint8_t i = 0; i < numVoice; i++)
     {
       //sample += ((((signed char)pgm_read_byte((const void *)(wavs[i] + ((unsigned char *) & (PCW[i] += FTW[i]))[1])) * AMP[i]) >> 8) >> 2);
+      //sample += (((_getWaveValue((const void *)(i, ((unsigned char *) & (PCW[i] += FTW[i]))[1])) * AMP[i]) >> 8) >> 2);
       sample += (((_getWaveValue((const void *)(i, ((unsigned char *) & (PCW[i] += FTW[i]))[1])) * AMP[i]) >> 8) >> 2);
     }
     DAC = map(sample, 0, 255, 0, 65538);
@@ -350,7 +351,7 @@ void synth::begin(unsigned char voice)
   cli(); // stop interrupts
   TCCR1A  = 0x00;                         //-Start audio interrupt
   TCCR1B  = 0x09;
-  OCR1A   = 16000000.0 / FS_music;        //-Auto sample rate
+  OCR1A   = 16000000.0 / FS_music;			  //-Auto sample rate
   SET(TIMSK1, OCIE1B);                    //-Start audio interrupt
   sei();                                  //-+
   mTCCR2A = 0xB0;                         //-8 bit audio PWM
@@ -395,13 +396,13 @@ void synth::begin(unsigned char voice, unsigned char d)
 #    if defined(__AVR_ATmega2560__)
   TCCR4A  = 0x00;                         //-Start audio interrupt
   TCCR4B  = 0x09;
-  OCR4A   = 16000000.0 / FS_music;        //-Auto sample rate
+  OCR4A   = 16000000.0 / FS_music;			  //-Auto sample rate
   SET(TIMSK4, OCIE4B);                    //-Start audio interrupt
   
 #    else
   TCCR1A  = 0x00;                         //-Start audio interrupt
   TCCR1B  = 0x09;
-  OCR1A   = 16000000.0 / FS_music;        //-Auto sample rate
+  OCR1A   = 16000000.0 / FS_music;			  //-Auto sample rate
   SET(TIMSK1, OCIE1B);                    //-Start audio interrupt
 #    endif
 
