@@ -132,8 +132,8 @@ class MusicWithoutDelay
     MusicWithoutDelay(const char *p);
     MusicWithoutDelay();
     
-    MusicWithoutDelay&  begin(int mode, int waveForm, int envelope, int mod );
-    MusicWithoutDelay&  begin(int waveForm, int envelope, int mod);
+    MusicWithoutDelay&  begin(byte mode, byte waveForm, byte envelope, int mod );
+    MusicWithoutDelay&  begin(byte waveForm, byte envelope, int mod);
     MusicWithoutDelay&  update();
     MusicWithoutDelay&  play();
     MusicWithoutDelay&  play(int repeat);
@@ -144,19 +144,20 @@ class MusicWithoutDelay
     MusicWithoutDelay&  setMod(int percent);
     MusicWithoutDelay&  setVolume(int volume);
     MusicWithoutDelay&  setSustain(int v);
-    MusicWithoutDelay&  setWave(int waveShape);
+    MusicWithoutDelay&  setWave(byte wave);
+    MusicWithoutDelay&  setEnvelope(byte env);
     MusicWithoutDelay&  setFrequency(float freq);
-    MusicWithoutDelay&  setOctave(int oct);
+    MusicWithoutDelay&  setOctave(byte oct);
     MusicWithoutDelay&  reverse(bool r);
     MusicWithoutDelay&  skipTo(long index);
     MusicWithoutDelay&  overrideSustain(bool v);
     // void readIt();
+    
     static float        getNoteAsFrequency(int n);
-
     long                getTotalTime();
     long                getCurrentTime();
     int                 getBPM();
-    int                 getOctave();
+    byte                getOctave();
     char*               getName();
     bool                isRest();
     bool                isMuted();
@@ -170,8 +171,10 @@ class MusicWithoutDelay
 
   private:
     void                _getCodeNote();
-    void                _setCodeNote(char increment);
+    void                _setCodeNote();
+    bool                _isStartNote(uint16_t pointer);
     double              _skipSolver();
+    
     uint32_t            pMillis;      //Yup...Thats a 'long' list of variables. Pun intended :D
     uint32_t            oneMillis;
     uint32_t            timeBar;
@@ -192,7 +195,7 @@ class MusicWithoutDelay
     uint8_t             myInstrument;
     uint8_t             mRepeat;
     int8_t              scale;
-    int                 skipCount;
+    uint16_t            skipCount;
     bool                resume, skip, single, reversed, wasPlaying, wasEnd, oneTime, delayer, rest, slur, start, finish, beat, isMute, sustainControl, flagRepeat, playSingleNote;
     int8_t              autoFlat[5];   // you can only have 5 of the black keys ;)
     int8_t              autoSharp[5];  //                                         
