@@ -634,7 +634,8 @@ void showPartition(bool showPartition, bool showAll)
         {
           Serial.print(F("n")); Serial.print(notes_idx + 1);
           Serial.print(F(", oct=")); Serial.print(notes[notes_idx][2]);
-          Serial.print(F(", dur=")); Serial.print(notes[notes_idx][0]);
+          Serial.print(F(", dur=")); Serial.print(notes[notes_idx][0] >> 1);
+          if (notes[notes_idx][0] & 0x01) Serial.print('.');
           Serial.print(F(", note=")); Serial.print(alphaNote[notes[notes_idx][1]]);
           Serial.println();
         }
@@ -781,7 +782,7 @@ void drawNote(byte dur, byte flat_sharp, char noteg, bool isdrown)
   //const char* charNote[]  = {"o", "d", "@", "|", "||", "|3", "|4"};
   Serial.print((isdrown) ? '-' : ' ');
 
-  if ((dur >> 1) < 10)  Serial.print((isdrown) ? '-' : ' ');
+  if ((dur >> 1) < 16)  Serial.print((isdrown) ? '-' : ' ');
 
   if (noteg < 0)
   {
@@ -794,8 +795,18 @@ void drawNote(byte dur, byte flat_sharp, char noteg, bool isdrown)
   }
 
   byte i = CHAR_NOTE_MAX;
-  while (i--) if ((dur >> (i + 1)) & 0x01) Serial.print(charNote[i]);
-  Serial.print((dur & 0x01) ? '.' : ((isdrown) ? '-' : ' '));
+  byte durb;
+  while (i--)
+  {
+    if ((dur >> (i + 1)) & 0x01)
+    {
+      Serial.print(charNote[i]);
+      durb = dur - (0x01 << (i + 1));
+      break;
+    }
+  }
+  //Serial.print(((dur & 0x01) || (dur & 0x01)) ? '.' : ((isdrown) ? '-' : ' '));
+  Serial.print((durb) ? '.' : ((isdrown) ? '-' : ' '));
 
   Serial.print((isdrown) ? '-' : ' ');
 }
