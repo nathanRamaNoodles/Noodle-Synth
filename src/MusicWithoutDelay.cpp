@@ -292,6 +292,7 @@ void MusicWithoutDelay::_getCodeNote()
     flat_sharp--;
     loc++;
   }
+  /*
   if (note)
   {
     byte i = 5;
@@ -310,6 +311,7 @@ void MusicWithoutDelay::_getCodeNote()
     }
     note += flat_sharp % 2;   // be sure values are from {-1, 0, 1} 
   }
+  //*/
 
   // now, get octave
   scale = 1;                              // ========> MOD:
@@ -322,13 +324,45 @@ void MusicWithoutDelay::_getCodeNote()
   {
     scale *= pgm_read_byte_near(mySong + loc++) - '0';
     scale += default_oct;
-    if      (scale < 1) scale = 1;
-    else if (scale > 7) scale = 7;
+    //if      (scale < 1) scale = 1;
+    //else if (scale > 7) scale = 7;
   }
   else
   {
     scale = default_oct;
   }
+  
+  if (note)
+  {
+    byte i = 5;
+    while (i--)
+    {
+      if      (alphaNote == autoSharp[i])
+      {
+        flat_sharp++;
+        break;
+      }
+      else if (alphaNote == autoFlat[i])
+      {
+        flat_sharp--;
+        break;
+      }
+    }
+    note += flat_sharp % 2;   // be sure values are from {-1, 0, 1} 
+
+    if      (!note)
+    {
+      note = 12;
+      scale--;
+    }
+    else if (note > 12)
+    {
+      note = 1;
+      scale++;
+    }
+  }
+  if      (scale < 1) scale = 1;
+  else if (scale > 7) scale = 7;
 }
 
 void MusicWithoutDelay::_setCodeNote()
