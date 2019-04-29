@@ -280,7 +280,7 @@ void MusicWithoutDelay::_getCodeNote()
   }
   //*/
 
-  // now, get optional and default '#' sharp and '_' flat
+  // now, get optional '#' sharp and '_' flat
   int8_t flat_sharp = 0;                    // ========> MOD:
   if      (pgm_read_byte_near(mySong + loc) == '#')
   {
@@ -292,26 +292,6 @@ void MusicWithoutDelay::_getCodeNote()
     flat_sharp--;
     loc++;
   }
-  /*
-  if (note)
-  {
-    byte i = 5;
-    while (i--)
-    {
-      if      (alphaNote == autoSharp[i])
-      {
-        flat_sharp++;
-        break;
-      }
-      else if (alphaNote == autoFlat[i])
-      {
-        flat_sharp--;
-        break;
-      }
-    }
-    note += flat_sharp % 2;   // be sure values are from {-1, 0, 1} 
-  }
-  //*/
 
   // now, get octave
   scale = 1;                              // ========> MOD:
@@ -331,7 +311,8 @@ void MusicWithoutDelay::_getCodeNote()
   {
     scale = default_oct;
   }
-  
+
+  // now, end with global '#' sharp and '_' flat, and adjust octave(scale) if needed
   if (note)
   {
     byte i = 5;
@@ -350,12 +331,12 @@ void MusicWithoutDelay::_getCodeNote()
     }
     note += flat_sharp % 2;   // be sure values are from {-1, 0, 1} 
 
-    if      (!note)
+    if      (!note)           // we got an abusive flat c 
     {
       note = 12;
       scale--;
     }
-    else if (note > 12)
+    else if (note > 12)       // we got an abusive sharp b
     {
       note = 1;
       scale++;
@@ -665,9 +646,9 @@ double MusicWithoutDelay::_skipSolver()
   while (isWhitespace(pgm_read_byte_near(mySong + skipCount))) skipCount++;
   
   num  = 0;
-  while (isDigit(pgm_read_byte_near(mySong + loc)))
+  while (isDigit(pgm_read_byte_near(mySong + skipCount)))
   {
-    num = (num * 10) + (pgm_read_byte_near(mySong + loc++) - '0');
+    num = (num * 10) + (pgm_read_byte_near(mySong + skipCount++) - '0');
   }
   
   bool period = false;
