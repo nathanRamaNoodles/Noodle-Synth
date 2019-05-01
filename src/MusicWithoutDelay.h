@@ -30,9 +30,16 @@
 
 #include "Arduino.h"
 #include "synth.h" // synth engine
+
+
+
 static synth edgar;
 
+
+
 #define twelveRoot 1.059463094359
+
+
 
 #define NOTE_B0  23
 #define NOTE_C1  24
@@ -134,74 +141,80 @@ class MusicWithoutDelay
     
     MusicWithoutDelay&  begin(byte mode, byte waveForm, byte envelope, int mod );
     MusicWithoutDelay&  begin(byte waveForm, byte envelope, int mod);
+    MusicWithoutDelay&  newSong(const char *p);
     MusicWithoutDelay&  update();
-    MusicWithoutDelay&  play();
-    MusicWithoutDelay&  play(int repeat);
     MusicWithoutDelay&  mute(bool m);
     MusicWithoutDelay&  pause(bool p);
-    MusicWithoutDelay&  newSong(const char *p);
+    MusicWithoutDelay&  reverse(bool r);
+    MusicWithoutDelay&  skipTo(long index);
+    MusicWithoutDelay&  play();
+    MusicWithoutDelay&  play(int repeat);
+    MusicWithoutDelay&  overrideSustain(bool v);
+    MusicWithoutDelay&  setSustain(int v);
+    MusicWithoutDelay&  setOctave(byte oct);
     MusicWithoutDelay&  setBPM(int tempo);
     MusicWithoutDelay&  setMod(int percent);
     MusicWithoutDelay&  setVolume(int volume);
-    MusicWithoutDelay&  setSustain(int v);
+    MusicWithoutDelay&  setFrequency(float freq);
     MusicWithoutDelay&  setWave(byte wave);
     MusicWithoutDelay&  setEnvelope(byte env);
-    MusicWithoutDelay&  setFrequency(float freq);
-    MusicWithoutDelay&  setOctave(byte oct);
-    MusicWithoutDelay&  reverse(bool r);
-    MusicWithoutDelay&  skipTo(long index);
-    MusicWithoutDelay&  overrideSustain(bool v);
     // void readIt();
     
     static float        getNoteAsFrequency(int n);
+    char*               getName();
     long                getTotalTime();
     long                getCurrentTime();
-    int                 getBPM();
     byte                getOctave();
-    char*               getName();
-    bool                isRest();
-    bool                isMuted();
-    bool                isStart();
-    bool                isEnd();
-    bool                isPaused();
-    bool                isNote();
-    bool                isBackwards();
+    int                 getBPM();
     bool                isSustainOverrided();
     bool                isSingleNote();
+    bool                isMuted();
+    bool                isPaused();
+    bool                isBackwards();
+    bool                isNote();
+    bool                isRest();
+    bool                isStart();
+    bool                isEnd();
 
   private:
     void                _getCodeNote();
     void                _setCodeNote();
-    bool                _isStartNote(uint16_t pointer);
+    bool                _isNoteDelimiter(uint16_t pointer);
     double              _skipSolver();
     
-    uint32_t            pMillis;      //Yup...Thats a 'long' list of variables. Pun intended :D
+    uint8_t             myInstrument;     //
+    uint32_t            pMillis;          //Yup...Thats a 'long' list of variables. Pun intended :D
     uint32_t            oneMillis;
-    uint32_t            timeBar;
     uint32_t            placeHolder1;
     uint32_t            placeHolder2;
-    uint32_t            totalTime;
-    uint32_t            currentTime;
-    uint32_t            duration;
-    uint16_t            wholenote;
-    uint16_t            loc;
-    uint16_t            pLoc;
-    uint16_t            bpm;
-    uint8_t             default_oct;
-    uint8_t             default_dur;
-    uint8_t             num;
-    uint8_t             slurCount;
-    uint8_t             note;
-    uint8_t             myInstrument;
-    uint8_t             mRepeat;
-    int8_t              scale;
-    uint16_t            skipCount;
-    bool                resume, skip, single, reversed, wasPlaying, wasEnd, oneTime, delayer, rest, slur, start, finish, beat, isMute, sustainControl, flagRepeat, playSingleNote;
-    int8_t              autoFlat[5];   // you can only have 5 of the black keys ;)
-    int8_t              autoSharp[5];  //                                         
+    
 #define SONG_NAME_LENGTH  1               // 1~15
-    char                songName[SONG_NAME_LENGTH];     // make this smaller to get more SRAM
-    const char*         mySong;
+    char                songName[SONG_NAME_LENGTH]; // current song name, make this smaller to get more SRAM
+    const char*         mySong;           // pointer to the current song
+    uint16_t            loc;              // pointer index to current note to play
+    uint16_t            pLoc;             // pointer index to the 1st note of the song
+    uint16_t            pEndLoc;          // pointer index to the last note of the song
+    uint16_t            skipCount;        // pointer index to compute skip solver
+    
+    uint8_t             default_oct;      // default octave for notes
+    uint8_t             default_dur;      // default duration for notes
+    int8_t              autoFlat[5];      // default flat notes, you can only have 5 of the black keys ;)
+    int8_t              autoSharp[5];     // default sharp notes, you can only have 5 of the black keys ;)
+    uint16_t            bpm;              // current Beat per Minute
+    uint16_t            wholenote;        // whole note reference, depending from BPM (beat per min)
+    uint32_t            totalTime;        // total time of the song
+    uint32_t            currentTime;      // current playing time of the song
+    
+    uint8_t             note;             // current note to play
+    uint32_t            duration;         // current duration for a note to play
+    int8_t              scale;            // current octave for a note to play
+    
+    uint8_t             num;              // var
+    uint8_t             mRepeat;          // how many times to repeat a song
+    //bool                resume, skip, single, reversed, wasPlaying, wasEnd, oneTime, delayer, start, finish,
+                              //rest, slur, beat, isMute, sustainControl, flagRepeat, playSingleNote;
+    bool                resume, delayer, start, finish, skip, reversed, wasPlaying, wasEnd, oneTime, 
+                              beat, isMute, sustainControl, flagRepeat, playSingleNote;
 };
 
 #endif
