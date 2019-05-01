@@ -127,7 +127,7 @@ void loop()
           //Serial.print("loop (set pause off): sf="); Serial.print(track1.isEnd()); Serial.print(", fb"); Serial.print(track1.isStart()); Serial.print(", ctime"); Serial.println(track1.getCurrentTime());
           setSongPause(true);
           //Serial.print("loop (set pause on): sf="); Serial.print(track1.isEnd()); Serial.print(", fb"); Serial.print(track1.isStart()); Serial.print(", ctime"); Serial.println(track1.getCurrentTime());
-          //clearScreen();
+          clearScreen();
           printInstructions();
         }
       }
