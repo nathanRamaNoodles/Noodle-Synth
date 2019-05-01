@@ -23,12 +23,15 @@
 
 #include "tables.h"
 
+
+
 #define   CHA           3
 #define   CHB           4
 
+#define   NONE          0
 #define   SUSTAIN       1
 #define   REV_SUSTAIN   2
-#define   NONE          0
+#define   SLUR          3
 
 #define   SINE          0
 #define   TRIANGLE      1
@@ -43,9 +46,11 @@
 #define   ENVELOPE3     3
 
 #if   defined(ESP8266)
-#  define FS_music      1700000.0
+//#  define FS_music      1700000.0
+#  define FS_music      1700000UL
 #else
-#  define FS_music      20000.0
+//#  define FS_music      20000.0
+#  define FS_music      20000UL
 #endif
 
 // macros
@@ -62,19 +67,19 @@ class synth
     synth();
     
     void    setNumVoices(uint8_t num);
-    void    begin(unsigned char voice);
-    void    begin(unsigned char voice, unsigned char d);
-    void    setupVoice(unsigned char voice, unsigned char wave, unsigned char pitch, unsigned char env, unsigned char length, unsigned int mod);
-    void    setWave(unsigned char voice, unsigned char wave);
-    void    setPitch(unsigned char voice, unsigned char MIDInote);
-    void    setEnvelope(unsigned char voice, unsigned char env);
-    void    setLength(unsigned char voice, unsigned char length);
-    void    setMod(unsigned char voice, unsigned char mod);
-    void    setVolume(unsigned char voice, int v);
-    void    setFrequency(unsigned char voice, float f);
-    void    mTrigger(unsigned char voice, unsigned char MIDInote);
-    void    trigger(unsigned char voice);
-    void    setSustain(unsigned char voice, int v);
+    void    begin(uint8_t voice);
+    void    begin(uint8_t voice, uint8_t d);
+    void    setupVoice(uint8_t voice, uint8_t wave, uint8_t pitch, uint8_t env, uint8_t length, uint8_t mod);
+    void    setWave(uint8_t voice, uint8_t wave);
+    void    setPitch(uint8_t voice, uint8_t MIDInote);
+    void    setEnvelope(uint8_t voice, uint8_t env);
+    void    setLength(uint8_t voice, uint8_t length);
+    void    setMod(uint8_t voice, uint8_t mod);
+    void    setVolume(uint8_t voice, uint8_t v);
+    void    setFrequency(uint8_t voice, float f);
+    void    mTrigger(uint8_t voice, uint8_t MIDInote);
+    void    trigger(uint8_t voice);
+    void    setSustain(uint8_t voice, uint8_t v);
     
   private:
     //int8_t  _getWaveValue(uint8_t voice, uint8_t value);
