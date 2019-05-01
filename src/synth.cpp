@@ -80,7 +80,7 @@ static uint16_t       numVoice;
 static uint8_t        stereoMode[maxVOICES];    // stereo variables
 static uint8_t        differentVoicesA          = 0;   // number of voices per output
 static uint8_t        differentVoicesB          = 0;
-static float          maxVolume[maxVOICES]      = {0};
+static uint8_t        maxVolume[maxVOICES]      = {0};
 static uint8_t        volumeSetupCounter        = 0;
 
 #elif defined(__arm__) && defined(TEENSYDUINO)
@@ -91,7 +91,7 @@ static uint8_t        originalOutput[maxVOICES] = {0};  // voices that initiate 
 static uint8_t        sameOutput[maxVOICES]     = {0};  // voices that share the same output with the originalOutput
 static uint8_t        stereoMode[maxVOICES];            // outPut pin locations
 static uint8_t        differentVoices           = 0;
-static float          maxVolume[maxVOICES]      = {0};
+static uint8_t        maxVolume[maxVOICES]      = {0};
 static uint8_t        volumeSetupCounter        = 0;
 
 #elif defined(ESP8266)
