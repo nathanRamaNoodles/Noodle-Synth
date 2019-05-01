@@ -350,7 +350,8 @@ void MusicWithoutDelay::_setCodeNote()
   if (!sustainControl)  // user did not define sustain, we are free to use it
   {
     // a slur note, "+"
-    if (pgm_read_byte_near(mySong + loc) == '+') setSustain(NONE);
+    //if (pgm_read_byte_near(mySong + loc) == '+') setSustain(NONE);
+    if (pgm_read_byte_near(mySong + loc) == '+') setSustain(SLUR);
     
     // else it can be only a ',' or NOTHING for the last note of the song
     else                                         setSustain(SUSTAIN);
@@ -700,7 +701,7 @@ MusicWithoutDelay& MusicWithoutDelay::overrideSustain(bool v)
 
 
 
-MusicWithoutDelay& MusicWithoutDelay::setSustain(int v)
+MusicWithoutDelay& MusicWithoutDelay::setSustain(byte v)
 {
   edgar.setSustain(myInstrument, v);
   
@@ -728,7 +729,7 @@ MusicWithoutDelay& MusicWithoutDelay::setBPM(int tempo)
 
 
 
-MusicWithoutDelay& MusicWithoutDelay::setMod( int percent)
+MusicWithoutDelay& MusicWithoutDelay::setMod(int percent)
 {
   edgar.setMod(myInstrument, percent + 64);
   
@@ -737,7 +738,7 @@ MusicWithoutDelay& MusicWithoutDelay::setMod( int percent)
 
 
 
-MusicWithoutDelay& MusicWithoutDelay::setVolume(int volume)
+MusicWithoutDelay& MusicWithoutDelay::setVolume(byte volume)
 {
   edgar.setVolume(myInstrument, volume);
   
@@ -774,7 +775,7 @@ MusicWithoutDelay&  MusicWithoutDelay::setEnvelope(byte env)
 
 
 
-float MusicWithoutDelay::getNoteAsFrequency(int n)
+float MusicWithoutDelay::getNoteAsFrequency(byte n)
 {
   return 440 * pow(twelveRoot, (n - 69));
 }
