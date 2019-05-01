@@ -103,6 +103,8 @@ void loop()
 
   commands();
 
+  //if (track1.isEnd())
+  //if (track1.isStart())
   if (track1.isEnd() || track1.isStart())
   {
     if (playAll)
@@ -115,8 +117,22 @@ void loop()
     
     if (!playRepeat)
     {
-      if (!playXtimes) setSongPause(true);
-      else             playXtimes--;
+      setSongSkip(0);   // keep synch
+      
+      //Serial.print("loop (end): sf="); Serial.print(track1.isEnd()); Serial.print(", fb"); Serial.print(track1.isStart()); Serial.print(", ctime"); Serial.println(track1.getCurrentTime());
+      if (!playXtimes) 
+      {
+        if (!track1.isPaused())
+        {
+          //Serial.print("loop (set pause off): sf="); Serial.print(track1.isEnd()); Serial.print(", fb"); Serial.print(track1.isStart()); Serial.print(", ctime"); Serial.println(track1.getCurrentTime());
+          setSongPause(true);
+          //Serial.print("loop (set pause on): sf="); Serial.print(track1.isEnd()); Serial.print(", fb"); Serial.print(track1.isStart()); Serial.print(", ctime"); Serial.println(track1.getCurrentTime());
+          //clearScreen();
+          printInstructions();
+        }
+      }
+      else
+        playXtimes--;
     }
   }
 }
@@ -132,6 +148,11 @@ void setSong(unsigned long skip)
   track1.newSong((byte*)pgm_read_ptr(&SONG_TABLE[song2play][0])).begin(CHAN, SHAPE, ENVELOPE, 0);
   track2.newSong((byte*)pgm_read_ptr(&SONG_TABLE[song2play][1])).begin(CHAN, SHAPE, ENVELOPE, 0);
 
+  //track1.overrideSustain(true);
+  //track1.setSustain(NONE);
+  //track2.overrideSustain(true);
+  //track2.setSustain(NONE);
+
   if (skip) setSongSkip(skip);
 
   ledTempo = (track1.getBPM()) * 100;
@@ -139,8 +160,8 @@ void setSong(unsigned long skip)
 
 void setSongSkip(unsigned long skip)
 {
-    track1.skipTo(skip);
-    track2.skipTo(skip);
+  track1.skipTo(skip);
+  track2.skipTo(skip);
 }
 
 void setSongBackward()
@@ -207,28 +228,15 @@ void commands()
     switch (str)
     {
       case 'p':
-        num = !track1.isPaused();
-        
-        if (num)  // it was playing
-        {
-          setSongPause(true);
-          
-          // in pause now, be sure to keep synch
-          //setSong(track1.getCurrentTime());
-        }
-        else
-        {
-          setSongPause(false);
-          
-          if (track1.isEnd() || track1.isStart())
-          {
-            setRepeat();
-          }
-        }
+        Serial.print("p1: "); Serial.print(track1.isEnd()); Serial.print(", "); Serial.print(track1.isStart()); Serial.print(", "); Serial.println(track1.getCurrentTime());
+        setSongPause(!track1.isPaused());
+        //setSongPause(false);
+        if (track1.isEnd()) setRepeat();
+        Serial.print("p2: "); Serial.print(track1.isEnd()); Serial.print(", "); Serial.print(track1.isStart()); Serial.print(", "); Serial.println(track1.getCurrentTime());
         break;
         
       case 'f':
-        setSongSkip(track1.getCurrentTime() + 10000L);
+        setSongSkip(track1.getCurrentTime() + ((track1.isBackwards()) ? - 10000L : 10000L));
         break;
           
       case 'b':
@@ -272,7 +280,7 @@ void commands()
     }
   }
 
-  clearScreen();
+  //clearScreen();
   printInstructions();
 }
 
@@ -295,12 +303,12 @@ void printInstructions()
   Serial.println(F("Type :"));
   printInstrItem(); Serial.print(F("a number] to select a song from 1 to ")); Serial.println(SONG_TABLE_MAX);
   printInstrItem(); Serial.print(F("p] to Play/Pause")); printInstrParam(); Serial.println((track1.isPaused()) ? F("PAUSE") : F("PLAY"));
-  printInstrItem(); Serial.println(F("f] to skip forward."));
-  printInstrItem(); Serial.print(F("b] to play forward/backward")); printInstrValid(track1.isBackwards());
+  printInstrItem(); Serial.println(F("f] to skip forward (10s)."));
+  printInstrItem(); Serial.print(F("b] to play  backward")); printInstrValid(track1.isBackwards());
   printInstrItem(); Serial.print(F("r] to REPEAT song(s)")); printInstrValid(playRepeat);
   printInstrItem(); Serial.print(F("a] to play ALL songs")); printInstrValid(playAll);
-  printInstrItem(); Serial.print(F("s] to cycle the wave SHAPE (1 to 6)")); printInstrParam(); Serial.println(SHAPE_NAME[SHAPE]);
-  printInstrItem(); Serial.print(F("e] to cycle the ENVELOPES  (1 to 4)")); printInstrParam(); Serial.print(F("ENVELOPE")); Serial.println(ENVELOPE);
+  printInstrItem(); Serial.print(F("s] to cycle the wave SHAPE (6)")); printInstrParam(); Serial.println(SHAPE_NAME[SHAPE]);
+  printInstrItem(); Serial.print(F("e] to cycle the ENVELOPES  (4)")); printInstrParam(); Serial.print(F("ENVELOPE")); Serial.println(ENVELOPE);
   printInstrItem(); Serial.println(F("w] to show PARTITION of the song"));
   printInstrItem(); Serial.println(F("x] to show NOTES from the song"));
   printLine();
@@ -412,12 +420,6 @@ void _getCodeNote()
       note = 12;
       break;
   }                                                     // ========> MOD: end
-
-  if (pgm_read_byte_near(mySong + loc) == '.')
-  {
-    duration++;
-    loc++;
-  }
 
   // now, get optional and default '#' sharp and '_' flat
   int8_t flat_sharp = 0;                    // ========> MOD:
