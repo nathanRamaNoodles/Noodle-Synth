@@ -230,7 +230,6 @@ void commands()
       case 'p':
         Serial.print("p1: "); Serial.print(track1.isEnd()); Serial.print(", "); Serial.print(track1.isStart()); Serial.print(", "); Serial.println(track1.getCurrentTime());
         setSongPause(!track1.isPaused());
-        //setSongPause(false);
         if (track1.isEnd()) setRepeat();
         Serial.print("p2: "); Serial.print(track1.isEnd()); Serial.print(", "); Serial.print(track1.isStart()); Serial.print(", "); Serial.println(track1.getCurrentTime());
         break;
@@ -280,7 +279,7 @@ void commands()
     }
   }
 
-  //clearScreen();
+  clearScreen();
   printInstructions();
 }
 
