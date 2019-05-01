@@ -1,11 +1,13 @@
 #include "Arduino.h"
 #include "synth.h"
 
+
+
 //MaxVoices settings (This increases memory usage, 22+ bytes per voice)
 #if   defined(__AVR_ATmega2560__)
 #  define   maxVOICES 10  //Arduino Mega2560; best performance would be 8
 #elif defined(__AVR__)
-#  define   maxVOICES 4   //Arduino Uno, Mini, Micro, Pro Micro, Nano, and Teensy 2.0; best performance would be 4, but change this to your microcontroller's processing power :)
+#  define   maxVOICES 2//4   //Arduino Uno, Mini, Micro, Pro Micro, Nano, and Teensy 2.0; best performance would be 4, but change this to your microcontroller's processing power :)
 #elif defined(__arm__) && defined(TEENSYDUINO)
 #  define   maxVOICES 16  //Teensy 3.++; Teensy boards can handle a whooping 30+ simulentaneous voices(Teensy is a powerful 32-bit chip)
 #elif defined(ESP8266)
@@ -15,23 +17,25 @@
 #endif
 //end of MaxVoice settings
 
-static unsigned int   PCW[maxVOICES];		  	  //-Wave phase accumolators
-static unsigned int   FTW[maxVOICES];         //-Wave frequency tuning words
-static unsigned char  AMP[maxVOICES];         //-Wave amplitudes [0-255]
-static unsigned int   PITCH[maxVOICES];       //-Voice pitch
-static unsigned int   MOD[maxVOICES];         //-Voice envelope modulation [0-1023 512=no mod. <512 pitch down >512 pitch up]
-static unsigned char  wavs[maxVOICES];        //-Wave table selector [address of wave in memory]
-static unsigned int   envs[maxVOICES];        //-Envelopte selector [address of envelope in memory]
-static unsigned int   EPCW[maxVOICES];        //-Envelope phase accumolator
-static unsigned int   EFTW[maxVOICES];        //-Envelope speed tuning word
-static unsigned int   sustainIt[maxVOICES];   //-sustain variables
-static unsigned int   revSustain[maxVOICES];  //-sustain variables
-static unsigned int   volume[maxVOICES];      //-volume variables
 
-static unsigned char divider    = maxVOICES;  //-Sample rate decimator for envelope
-static unsigned int  tim        = 0;
-static unsigned char tik        = 0;
-static unsigned int  numVoice;
+
+static uint16_t       PCW[maxVOICES];		  	  //-Wave phase accumolators
+static uint16_t       FTW[maxVOICES];         //-Wave frequency tuning words
+static uint8_t        AMP[maxVOICES];         //-Wave amplitudes [0-255]
+static uint16_t       PITCH[maxVOICES];       //-Voice pitch
+static int8_t         MOD[maxVOICES];         //-Voice envelope modulation [0-1023 512=no mod. <512 pitch down >512 pitch up]
+static uint8_t        wavs[maxVOICES];        //-Wave table selector [address of wave in memory]
+static uint16_t       envs[maxVOICES];        //-Envelopte selector [address of envelope in memory]
+static uint16_t       EPCW[maxVOICES];        //-Envelope phase accumolator
+static uint16_t       EFTW[maxVOICES];        //-Envelope speed tuning word
+static uint16_t       sustainIt[maxVOICES];   //-sustain variables
+static uint16_t       revSustain[maxVOICES];  //-sustain variables
+static uint16_t       volume[maxVOICES];      //-volume variables
+
+static uint8_t        divider   = maxVOICES;  //-Sample rate decimator for envelope
+static uint16_t       tim       = 0;
+static uint8_t        tik       = 0;
+static uint16_t       numVoice;
 
 
 // Timer 0, used by milllis(), micros(), delay(), PWM pin 5 & 6
@@ -73,21 +77,21 @@ static unsigned int  numVoice;
 #    define   speaker_PinB  3
 #  endif
 
-static unsigned int   stereoMode[maxVOICES];    //stereo variables
-static uint8_t        differentVoicesA          = 0;   //number of voices per output
+static uint8_t        stereoMode[maxVOICES];    // stereo variables
+static uint8_t        differentVoicesA          = 0;   // number of voices per output
 static uint8_t        differentVoicesB          = 0;
-static float          maxVolume[maxVOICES]      = {0};
+///static float          maxVolume[maxVOICES]      = {0};
 static uint8_t        volumeSetupCounter        = 0;
 
 #elif defined(__arm__) && defined(TEENSYDUINO)
 static void           timerInterrupt();
 static                IntervalTimer sampleTimer;
-static unsigned char  sample[maxVOICES];
-static unsigned int   originalOutput[maxVOICES] = {0};  //voices that initiate the output
-static unsigned int   sameOutput[maxVOICES]     = {0};  //voices that share the same output with the originalOutput
-static unsigned int   stereoMode[maxVOICES];            //outPut pin locations
-static unsigned int   differentVoices           = 0;
-static float          maxVolume[maxVOICES]      = {0};
+static uint8_t        sample[maxVOICES];
+static uint8_t        originalOutput[maxVOICES] = {0};  // voices that initiate the output
+static uint8_t        sameOutput[maxVOICES]     = {0};  // voices that share the same output with the originalOutput
+static uint8_t        stereoMode[maxVOICES];            // outPut pin locations
+static uint8_t        differentVoices           = 0;
+//static float          maxVolume[maxVOICES]      = {0};
 static uint8_t        volumeSetupCounter        = 0;
 
 #elif defined(ESP8266)
@@ -102,9 +106,9 @@ uint16_t              err;
 //int8_t synth::_getWaveValue(uint8_t voice, uint8_t value)
 int8_t _getWaveValue(uint8_t voice, uint8_t value)
 {
-  //unsigned int  pWaveTable = (unsigned int)SinTable;
   unsigned int  pWaveTable = 0;
   char          r;
+  
   switch (wavs[voice])
   { //                    0         64        128       192         256
     case TRIANGLE:    //  0         127       0         -127        0
@@ -137,6 +141,15 @@ int8_t _getWaveValue(uint8_t voice, uint8_t value)
   return r;
 }
 //*/
+
+
+
+int8_t _getEnvValue(int8_t value)
+{
+  value  = (value * -1) + volume[divider];
+  return value + (((unsigned char*) &(EPCW[divider] += EFTW[divider]))[1]);
+}
+
 
 
 #if   defined(__AVR__)
@@ -186,42 +199,49 @@ void        ICACHE_RAM_ATTR onTimerISR()
     //-------------------------------
     if (!(((unsigned char*)&EPCW[divider])[1] & 0x80))
     {
-      int value = (((unsigned char*) &(EPCW[divider] += EFTW[divider]))[1]);
+      uint8_t value = (((unsigned char*) &(EPCW[divider] += EFTW[divider]))[1]);
       
       switch (sustainIt[divider])
       {
         case SUSTAIN:           //default
-          if (((unsigned)value) < volume[divider])
+          if (value < volume[divider])
           {
-            value  = (value * -1) + volume[divider];
-            value += (((unsigned char*) &(EPCW[divider] += EFTW[divider]))[1]);
+            value  = _getEnvValue(value);
+            //value  = (value * -1) + volume[divider];
+            //value += (((unsigned char*) &(EPCW[divider] += EFTW[divider]))[1]);
           }
           break;
         case REV_SUSTAIN:
           if (volume[divider] >= 70)
           {
-            if (((unsigned)value) < volume[divider])
+            if (value < volume[divider])
             {
-              value  = (value * -1) + volume[divider];
-              value += (((unsigned char*) &(EPCW[divider] += EFTW[divider]))[1]);
+              value  = _getEnvValue(value);
+              //value  = (value * -1) + volume[divider];
+              //value += (((unsigned char*) &(EPCW[divider] += EFTW[divider]))[1]);
             }
           }
-          else if (((unsigned)value) < revSustain[divider])
+          else if (value < revSustain[divider])
           {
             value = (value * -1) + revSustain[divider];
-            if (((unsigned)value) < volume[divider])
+            if (value < volume[divider])
             {
-              value  = (value);
+              //value  = (value);
               value += (((unsigned char*) &(EPCW[divider] += EFTW[divider]))[1]);
             }
           }
           break;
         case NONE:
-          // even monotone note must be lightly rounded (prevent 'clacks')
-          if (((unsigned)value) > 24)   // sounds like best results from 16~32
+          value  = _getEnvValue(value);
+          //value  = (value * -1) + volume[divider];
+          //value += (((unsigned char*) &(EPCW[divider] += EFTW[divider]))[1]);
+          break;
+        case SLUR:
+          if (value > 24)   // sounds like best results from 16~32
           {
-            value  = (value * -1) + volume[divider];
-            value += (((unsigned char*) &(EPCW[divider] += EFTW[divider]))[1]);
+            value  = _getEnvValue(value);
+            //value  = (value * -1) + volume[divider];
+            //value += (((unsigned char*) &(EPCW[divider] += EFTW[divider]))[1]);
           }
           break;
       }
@@ -239,7 +259,7 @@ void        ICACHE_RAM_ATTR onTimerISR()
     //  Synthesizer/audio mixer
     //-------------------------------
 #if defined(__AVR_ATmega32U4__)
-    unsigned char sample = 127;
+    uint8_t sample = 127;
     for (uint8_t i = 0; i < numVoice; i++)
     {
       //sample += ((((signed char)pgm_read_byte(wavs[i] + ((unsigned char *) & (PCW[i] += FTW[i]))[1]) * AMP[i]) >> 8) >> 2);
@@ -248,7 +268,7 @@ void        ICACHE_RAM_ATTR onTimerISR()
     analogWrite(speaker_Pin, sample);  //The pro micro has a 10 bit timer, so analogWrite can shrink it to 8 bit
 
 #elif defined(ESP8266)
-    unsigned char sample = 127;
+    uint8_t sample = 127;
     for (uint8_t i = 0; i < numVoice; i++)
     {
       //sample += ((((signed char)pgm_read_byte((const void *)(wavs[i] + ((unsigned char *) & (PCW[i] += FTW[i]))[1])) * AMP[i]) >> 8) >> 2);
@@ -274,19 +294,19 @@ void        ICACHE_RAM_ATTR onTimerISR()
     i2s_write_sample(i2sACC);
     
 #elif defined(__AVR__)
-    unsigned char sample = 127;
-    unsigned char shared = 127;
+    uint8_t sample = 127;
+    uint8_t shared = 127;
     for (uint8_t i = 0; i < numVoice; i++)
     {
       if (stereoMode[i] == 0)
       {
         //sample += ((((signed char)pgm_read_byte(wavs[i] + ((unsigned char *) & (PCW[i] += FTW[i]))[1]) * AMP[i]) >> 8) >> 2);
-        sample += (((_getWaveValue(i, ((unsigned char *) & (PCW[i] += FTW[i]))[1]) * AMP[i]) >> 8) >> 2);
+        sample += (((_getWaveValue(i, ((unsigned char *) &(PCW[i] += FTW[i]))[1]) * AMP[i]) >> 8) >> 2);
       }
       else
       {
         //shared += ((((signed char)pgm_read_byte(wavs[i] + ((unsigned char *) & (PCW[i] += FTW[i]))[1]) * AMP[i]) >> 8) >> 2);
-        shared += (((_getWaveValue(i, ((unsigned char *) & (PCW[i] += FTW[i]))[1]) * AMP[i]) >> 8) >> 2);
+        shared += (((_getWaveValue(i, ((unsigned char *) &(PCW[i] += FTW[i]))[1]) * AMP[i]) >> 8) >> 2);
       }
     }
     mOCR2A = sample;
@@ -302,7 +322,7 @@ void        ICACHE_RAM_ATTR onTimerISR()
     {
       uint8_t giveME = (sameOutput[i] != 0) ? sameOutput[i] : originalOutput[i]; //Here is the most important part; I connect the voices that share the same output pin :)
       //sample[giveME] += ((((signed char)pgm_read_byte(wavs[i] + ((unsigned char *) & (PCW[i] += FTW[i]))[1]) * AMP[i]) >> 8) >> 2); //update wave
-      sample[giveME] += (((_getWaveValue(i, ((unsigned char *) & (PCW[i] += FTW[i]))[1]) >> 2)) * AMP[i]) >> 8) >> 2); //update wave
+      sample[giveME] += (((_getWaveValue(i, ((unsigned char *) &(PCW[i] += FTW[i]))[1]) >> 2)) * AMP[i]) >> 8) >> 2); //update wave
     }
     
     for (uint8_t i = 0; i < numVoice; i++)
@@ -335,14 +355,15 @@ synth::synth() {}
 
 
 
-void synth::begin(unsigned char voice)
+void synth::begin(uint8_t voice)
 {
 #if   defined(__AVR_ATmega32U4__)
   pinMode(speaker_Pin, OUTPUT);
   cli(); // stop interrupts
   TCCR1A  = 0x00;                         //-Start audio interrupt
   TCCR1B  = 0x09;
-  OCR1A   = 16000000.0 / FS_music;			  //-Auto sample rate
+  //OCR1A   = 16000000.0 / FS_music;			  //-Auto sample rate
+  OCR1A   = 16000000UL / FS_music;        //-Auto sample rate
   SET(TIMSK1, OCIE1B);                    //-Start audio interrupt
   sei();                                  //-+
   mTCCR2A = 0xB0;                         //-8 bit audio PWM
@@ -375,7 +396,7 @@ void synth::setNumVoices(uint8_t num)
 //  Startup fancy selecting various output modes
 //*********************************************************************
 
-void synth::begin(unsigned char voice, unsigned char d)
+void synth::begin(uint8_t voice, uint8_t d)
 {
 #if   defined(__AVR_ATmega32U4__) || defined(ESP8266)
   begin(voice);
@@ -387,20 +408,23 @@ void synth::begin(unsigned char voice, unsigned char d)
 #    if defined(__AVR_ATmega2560__)
   TCCR4A  = 0x00;                         //-Start audio interrupt
   TCCR4B  = 0x09;
-  OCR4A   = 16000000.0 / FS_music;			  //-Auto sample rate
+  //OCR4A   = 16000000.0 / FS_music;			  //-Auto sample rate
+  OCR4A   = 16000000UL / FS_music;        //-Auto sample rate
   SET(TIMSK4, OCIE4B);                    //-Start audio interrupt
   
 #    else
   TCCR1A  = 0x00;                         //-Start audio interrupt
   TCCR1B  = 0x09;
-  OCR1A   = 16000000.0 / FS_music;			  //-Auto sample rate
+  //OCR1A   = 16000000.0 / FS_music;			  //-Auto sample rate
+  OCR1A   = 16000000UL / FS_music;        //-Auto sample rate
   SET(TIMSK1, OCIE1B);                    //-Start audio interrupt
 #    endif
 
   sei();                                  //-restart interuption
   
 #  elif defined(__arm__) && defined(TEENSYDUINO)
-  sampleTimer.begin(timerInterrupt, 1000000.0 / FS_music);
+  //sampleTimer.begin(timerInterrupt, 1000000.0 / FS_music);
+  sampleTimer.begin(timerInterrupt, 1000000UL / FS_music);
 #  endif
 
   switch (d)
@@ -409,15 +433,17 @@ void synth::begin(unsigned char voice, unsigned char d)
 #if   defined(__arm__) && defined(TEENSYDUINO)
     default:
       for (uint8_t i = 0; i < numVoice; i++)
-      { //check to see if output pin is different from the other voices
+      { 
+        //check to see if output pin is different from the other voices
         if      (stereoMode[i] == d)
         {
           // Serial.print("Match: ");Serial.print(voice);Serial.print(" = ");Serial.println(i);
           sameOutput[voice] = i;
           break; //not different
         }
-        else if (((unsigned)i) == (numVoice - 1))
-        { //we have reached the end, and have found a unique pin
+        else if (i == (numVoice - 1))
+        { 
+          //we have reached the end, and have found a unique pin
           // differentVoices++;//different
           // Serial.print("Original: ");Serial.println(voice);
           originalOutput[voice] = voice;
@@ -473,7 +499,7 @@ void synth::begin(unsigned char voice, unsigned char d)
 //  voice[0-3],wave[0-6],pitch[0-127],envelope[0-4],length[0-127],mod[0-127:64=no mod]
 //*********************************************************************
 
-void synth::setupVoice(unsigned char voice, unsigned char wave, unsigned char pitch, unsigned char env, unsigned char length, unsigned int mod)
+void synth::setupVoice(uint8_t voice, uint8_t wave, uint8_t pitch, uint8_t env, uint8_t length, uint8_t mod)
 {
   setWave(voice, wave);
   setPitch(voice, pitch);
@@ -498,7 +524,7 @@ void synth::setupVoice(unsigned char voice, unsigned char wave, unsigned char pi
 //  Setup wave [0-6]
 //*********************************************************************
 
-void synth::setWave(unsigned char voice, unsigned char wave)
+void synth::setWave(uint8_t voice, uint8_t wave)
 {
   wavs[voice] = wave;
   /*
@@ -532,7 +558,7 @@ void synth::setWave(unsigned char voice, unsigned char wave)
 //  Setup Pitch [0-127]
 //*********************************************************************
 
-void synth::setPitch(unsigned char voice, unsigned char MIDInote)
+void synth::setPitch(uint8_t voice, uint8_t MIDInote)
 {
   PITCH[voice] = pgm_read_word(&PITCHS[MIDInote]);
 }
@@ -543,20 +569,20 @@ void synth::setPitch(unsigned char voice, unsigned char MIDInote)
 //  Setup Envelope [0-4]
 //*********************************************************************
 
-void synth::setEnvelope(unsigned char voice, unsigned char env)
+void synth::setEnvelope(uint8_t voice, uint8_t env)
 {
   switch (env)
   {
-    case 1:
+    case 0:
       envs[voice] = (unsigned int)Env0;
       break;
-    case 2:
+    case 1:
       envs[voice] = (unsigned int)Env1;
       break;
-    case 3:
+    case 2:
       envs[voice] = (unsigned int)Env2;
       break;
-    case 4:
+    case 3:
       envs[voice] = (unsigned int)Env3;
       break;
     default:
@@ -567,19 +593,21 @@ void synth::setEnvelope(unsigned char voice, unsigned char env)
 
 
 
-void synth::setFrequency(unsigned char voice, float f)
+void synth::setFrequency(uint8_t voice, float f)
 {
 #if   defined(ESP8266)
-  PITCH[voice] = f / (FS_music / 65535.0) * 38;
+  //PITCH[voice] = f / (FS_music / 65535.0) * 38;
+  PITCH[voice] = f / (FS_music / 65535U) * 38;
   
 #else
-  PITCH[voice] = f / (FS_music / 65535.0);
+  //PITCH[voice] = f / (FS_music / 65535.0);
+  PITCH[voice] = f / (FS_music / 65535U);
 #endif
 }
 
 
 
-void synth::trigger(unsigned char voice)
+void synth::trigger(uint8_t voice)
 {
   EPCW[voice] = 0;
   FTW[voice]  = PITCH[voice];
@@ -592,7 +620,7 @@ void synth::trigger(unsigned char voice)
 //  Setup Length [0-128]
 //*********************************************************************
 
-void synth::setLength(unsigned char voice, unsigned char length)
+void synth::setLength(uint8_t voice, uint8_t length)
 {
 #if   defined(ESP8266)
   EFTW[voice]       = pgm_read_word(&EFTWS[length + 10]);
@@ -610,40 +638,46 @@ void synth::setLength(unsigned char voice, unsigned char length)
 //  Setup mod
 //*********************************************************************
 
-void synth::setMod(unsigned char voice, unsigned char mod)
+void synth::setMod(uint8_t voice, uint8_t mod)
 {
   //MOD[voice]=(unsigned int)mod*8;//0-1023 512=no mod
-  MOD[voice] = (int)mod - 64; //0-1023 512=no mod
+  MOD[voice] = mod - 64; //  -64~63, 0=no mod
 }
 
 
 
-void synth::setSustain(unsigned char voice, int v)
+void synth::setSustain(uint8_t voice, uint8_t v)
 {
   sustainIt[voice] = v;
 }
 
 
 
-void synth::setVolume(unsigned char voice, int v)
+void synth::setVolume(uint8_t voice, uint8_t v)
 {
+  uint8_t maxVolume[maxVOICES] = {0};
+  
 #if   defined(__arm__) && defined(TEENSYDUINO)
   if (volumeSetupCounter <= numVoice)
-  { //skip the first time this method is called because we don't know how many instruments will share an output pin yet.
+  { 
+    //skip the first time this method is called because we don't know how many instruments will share an output pin yet.
     if (volumeSetupCounter == numVoice)
-    { //one time setup to find maxVolume for each output pin
-      unsigned int store[numVoice] = {0};
-      for (uint8_t j = 0; j < numVoice; j++)
+    { 
+      //one time setup to find maxVolume for each output pin
+      uint8_t store[numVoice] = {0};
+      for (uint8_t i = 0; i < numVoice; i++)
       {
-        int giveME    = (sameOutput[j] != 0) ? sameOutput[j] : originalOutput[j];
-        store[giveME] = store[giveME] + 1;   //add up pins that use same output
+        uint8_t giveME  = (sameOutput[i] != 0) ? sameOutput[i] : originalOutput[i];
+        store[giveME]  += 1;                  //add up pins that use same output
         // Serial.println(giveME);
       }
       
       //Calculate maxVolume for each pin.
       for (uint8_t i = 0; i < numVoice; i++)
       {
-        maxVolume[i] = (store[i % differentVoices] > 4) ? (127 * (((51 - store[i % differentVoices]) * 2) / 120.0)) : 127; //apply formula that finds maxVolume depending on the number of voices per pin.
+        //apply formula that finds maxVolume depending on the number of voices per pin.
+        //maxVolume[i] = (store[i % differentVoices] > 4) ? (127 * (((51 - store[i % differentVoices]) * 2) / 120.0)) : 127;
+        maxVolume[i] = (store[i % differentVoices] > 4) ? (127 * (((51 - store[i % differentVoices]) * 2) / 120)) : 127; 
         // Serial.print("Voice ");Serial.print(i);Serial.print(" , maxVolume: ");Serial.print(maxVolume[i]);Serial.print(" , numberPins: ");Serial.println(store[i%differentVoices]);
       }
     }
@@ -651,20 +685,28 @@ void synth::setVolume(unsigned char voice, int v)
   }
   volume[voice] = map(v, 127, 0, 127 - maxVolume[voice], 127);
 
-#elif defined(__AVR_ATmega32U4__) || defined(ESP8266)  //no need to check same output, because these boards don't support Stereo mode :'(
-  float maxVolume = (numVoice > 4) ? (127 * (((49 - numVoice) * 2) / 120.0)) : 127;
-  volume[voice]   = map(v, 127, 0, 127 - maxVolume, 127);
+#elif defined(__AVR_ATmega32U4__) || defined(ESP8266)  
+  //no need to check same output, because these boards don't support Stereo mode :'(
+  //float maxVolume = (numVoice > 4) ? (127 * (((49 - numVoice) * 2) / 120.0)) : 127;
+  uint8_t maxVolume = (numVoice > 4) ? (127 * (((49 - numVoice) * 2) / 120)) : 127;
+  volume[voice]     = map(v, 127, 0, 127 - maxVolume, 127);
 
 #else  //Uno and Mega
   if (volumeSetupCounter <= numVoice)
-  { //skip the first time this method is called because we don't know how many instruments will share an output pin yet.
+  { 
+    //skip the first time this method is called because we don't know how many instruments will share an output pin yet.
     if (volumeSetupCounter == numVoice)
-    { //one time setup to find maxVolume for each output pin
-      float maxVolumeA = (differentVoicesA > 3) ? (127 * (((49 - differentVoicesA) * 2) / 120.0)) : 127; //Calculate maxVolume for each pin.
-      float maxVolumeB = (differentVoicesB > 3) ? (127 * (((49 - differentVoicesB) * 2) / 120.0)) : 127;
-      for (uint8_t j = 0; j < numVoice; j++)
+    { 
+      //one time setup to find maxVolume for each output pin, calculate maxVolume for each pin.
+      //float maxVolumeA = (differentVoicesA > 3) ? (127 * (((49 - differentVoicesA) * 2) / 120.0)) : 127;
+      //float maxVolumeB = (differentVoicesB > 3) ? (127 * (((49 - differentVoicesB) * 2) / 120.0)) : 127;
+      uint8_t maxVolumeA = (differentVoicesA > 3) ? (127 * (((49 - differentVoicesA) * 2) / 120)) : 127;
+      uint8_t maxVolumeB = (differentVoicesB > 3) ? (127 * (((49 - differentVoicesB) * 2) / 120)) : 127;
+      
+      //Calculate maxVolume for each pin.
+      for (uint8_t i = 0; i < numVoice; i++)
       {
-        maxVolume[j] = (stereoMode[j] == 0) ? maxVolumeA : maxVolumeB;
+        maxVolume[i] = (stereoMode[i] == 0) ? maxVolumeA : maxVolumeB;
         // Serial.print("Voice ");Serial.print(j);Serial.print(" , maxVolume: ");Serial.print(maxVolume[j]);Serial.print(" , numberPins: ");Serial.println((stereoMode[j]==0)? differentVoicesA:differentVoicesB);
       }
     }
@@ -681,7 +723,7 @@ void synth::setVolume(unsigned char voice, int v)
 //  Midi trigger
 //*********************************************************************
 
-void synth::mTrigger(unsigned char voice, unsigned char MIDInote)
+void synth::mTrigger(uint8_t voice, uint8_t MIDInote)
 {
 #if   defined(ESP8266)
   PITCH[voice] = pgm_read_word(&PITCHS[MIDInote - 12]);
@@ -691,7 +733,7 @@ void synth::mTrigger(unsigned char voice, unsigned char MIDInote)
 #endif
 
   EPCW[voice]  = 0;
-  FTW[divider] = PITCH[voice] + (int)   (((PITCH[voice] >> 6) * (EPCW[voice] >> 6)) / 128) * MOD[voice];
+  FTW[divider] = PITCH[voice] + (uint16_t)(((PITCH[voice] >> 6) * (EPCW[voice] >> 6)) / 128) * MOD[voice];
 }
 
 
