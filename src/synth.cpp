@@ -7,7 +7,7 @@
 #if   defined(__AVR_ATmega2560__)
 #  define   maxVOICES 10  //Arduino Mega2560; best performance would be 8
 #elif defined(__AVR__)
-#  define   maxVOICES 2//4   //Arduino Uno, Mini, Micro, Pro Micro, Nano, and Teensy 2.0; best performance would be 4, but change this to your microcontroller's processing power :)
+#  define   maxVOICES 4   //Arduino Uno, Mini, Micro, Pro Micro, Nano, and Teensy 2.0; best performance would be 4, but change this to your microcontroller's processing power :)
 #elif defined(__arm__) && defined(TEENSYDUINO)
 #  define   maxVOICES 16  //Teensy 3.++; Teensy boards can handle a whooping 30+ simulentaneous voices(Teensy is a powerful 32-bit chip)
 #elif defined(ESP8266)
