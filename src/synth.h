@@ -5,10 +5,13 @@
 //  Dzl/Illutron 2014
 //
 //*************************************************************************************
+
 #ifndef _SYNTH
 #define _SYNTH
 
-#if defined(__AVR__) || defined(__arm__) && defined(TEENSYDUINO)
+
+
+#if   defined(__AVR__) || defined(__arm__) && defined(TEENSYDUINO)
 #  include <avr/pgmspace.h>
 #  include <avr/interrupt.h>
 #elif defined(ESP8266)
@@ -39,7 +42,7 @@
 #define   ENVELOPE2     2
 #define   ENVELOPE3     3
 
-#if defined(ESP8266)
+#if   defined(ESP8266)
 #  define FS_music      1700000.0
 #else
 #  define FS_music      20000.0
@@ -74,7 +77,7 @@ class synth
     void    setSustain(unsigned char voice, int v);
     
   private:
-    //int8_t _getWaveValue(uint8_t voice, uint8_t value);
+    //int8_t  _getWaveValue(uint8_t voice, uint8_t value);
     //nothing :D
 };
 
