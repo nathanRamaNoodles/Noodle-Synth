@@ -150,17 +150,17 @@ class MusicWithoutDelay
     MusicWithoutDelay&  play();
     MusicWithoutDelay&  play(int repeat);
     MusicWithoutDelay&  overrideSustain(bool v);
-    MusicWithoutDelay&  setSustain(int v);
+    MusicWithoutDelay&  setSustain(byte v);
     MusicWithoutDelay&  setOctave(byte oct);
     MusicWithoutDelay&  setBPM(int tempo);
     MusicWithoutDelay&  setMod(int percent);
-    MusicWithoutDelay&  setVolume(int volume);
+    MusicWithoutDelay&  setVolume(byte volume);
     MusicWithoutDelay&  setFrequency(float freq);
     MusicWithoutDelay&  setWave(byte wave);
     MusicWithoutDelay&  setEnvelope(byte env);
     // void readIt();
     
-    static float        getNoteAsFrequency(int n);
+    static float        getNoteAsFrequency(byte n);
     char*               getName();
     long                getTotalTime();
     long                getCurrentTime();
