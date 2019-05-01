@@ -80,7 +80,7 @@ static uint16_t       numVoice;
 static uint8_t        stereoMode[maxVOICES];    // stereo variables
 static uint8_t        differentVoicesA          = 0;   // number of voices per output
 static uint8_t        differentVoicesB          = 0;
-///static float          maxVolume[maxVOICES]      = {0};
+static float          maxVolume[maxVOICES]      = {0};
 static uint8_t        volumeSetupCounter        = 0;
 
 #elif defined(__arm__) && defined(TEENSYDUINO)
@@ -91,7 +91,7 @@ static uint8_t        originalOutput[maxVOICES] = {0};  // voices that initiate 
 static uint8_t        sameOutput[maxVOICES]     = {0};  // voices that share the same output with the originalOutput
 static uint8_t        stereoMode[maxVOICES];            // outPut pin locations
 static uint8_t        differentVoices           = 0;
-//static float          maxVolume[maxVOICES]      = {0};
+static float          maxVolume[maxVOICES]      = {0};
 static uint8_t        volumeSetupCounter        = 0;
 
 #elif defined(ESP8266)
@@ -655,8 +655,6 @@ void synth::setSustain(uint8_t voice, uint8_t v)
 
 void synth::setVolume(uint8_t voice, uint8_t v)
 {
-  uint8_t maxVolume[maxVOICES] = {0};
-  
 #if   defined(__arm__) && defined(TEENSYDUINO)
   if (volumeSetupCounter <= numVoice)
   { 
@@ -677,7 +675,8 @@ void synth::setVolume(uint8_t voice, uint8_t v)
       {
         //apply formula that finds maxVolume depending on the number of voices per pin.
         //maxVolume[i] = (store[i % differentVoices] > 4) ? (127 * (((51 - store[i % differentVoices]) * 2) / 120.0)) : 127;
-        maxVolume[i] = (store[i % differentVoices] > 4) ? (127 * (((51 - store[i % differentVoices]) * 2) / 120)) : 127; 
+        //maxVolume[i] = (store[i % differentVoices] > 4) ? (127 * ((51 - store[i % differentVoices]) / 60)) : 127;
+        maxVolume[i] = (store[i % differentVoices] > 4) ? (2 * (51 - store[i % differentVoices])) : 127;
         // Serial.print("Voice ");Serial.print(i);Serial.print(" , maxVolume: ");Serial.print(maxVolume[i]);Serial.print(" , numberPins: ");Serial.println(store[i%differentVoices]);
       }
     }
@@ -688,7 +687,8 @@ void synth::setVolume(uint8_t voice, uint8_t v)
 #elif defined(__AVR_ATmega32U4__) || defined(ESP8266)  
   //no need to check same output, because these boards don't support Stereo mode :'(
   //float maxVolume = (numVoice > 4) ? (127 * (((49 - numVoice) * 2) / 120.0)) : 127;
-  uint8_t maxVolume = (numVoice > 4) ? (127 * (((49 - numVoice) * 2) / 120)) : 127;
+  //uint8_t maxVolume = (numVoice > 4) ? (127 * ((49 - numVoice) / 60)) : 127;
+  uint8_t maxVolume = (numVoice > 4) ? (2 * (49 - numVoice)) : 127;
   volume[voice]     = map(v, 127, 0, 127 - maxVolume, 127);
 
 #else  //Uno and Mega
@@ -700,8 +700,10 @@ void synth::setVolume(uint8_t voice, uint8_t v)
       //one time setup to find maxVolume for each output pin, calculate maxVolume for each pin.
       //float maxVolumeA = (differentVoicesA > 3) ? (127 * (((49 - differentVoicesA) * 2) / 120.0)) : 127;
       //float maxVolumeB = (differentVoicesB > 3) ? (127 * (((49 - differentVoicesB) * 2) / 120.0)) : 127;
-      uint8_t maxVolumeA = (differentVoicesA > 3) ? (127 * (((49 - differentVoicesA) * 2) / 120)) : 127;
-      uint8_t maxVolumeB = (differentVoicesB > 3) ? (127 * (((49 - differentVoicesB) * 2) / 120)) : 127;
+      //uint8_t maxVolumeA = (differentVoicesA > 3) ? (127 * ((49 - differentVoicesA) / 60)) : 127;
+      //uint8_t maxVolumeB = (differentVoicesB > 3) ? (127 * ((49 - differentVoicesB) / 60)) : 127;
+      uint8_t maxVolumeA = (differentVoicesA > 3) ? (2 * (49 - differentVoicesA)) : 127;    // 2.11
+      uint8_t maxVolumeB = (differentVoicesB > 3) ? (2 * (49 - differentVoicesB)) : 127;
       
       //Calculate maxVolume for each pin.
       for (uint8_t i = 0; i < numVoice; i++)
