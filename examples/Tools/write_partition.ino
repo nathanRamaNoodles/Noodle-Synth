@@ -50,10 +50,10 @@ MusicWithoutDelay track2;
 
 
 
-byte      SHAPE           = 1;
+byte      SHAPE           = 0;
 const char* SHAPE_NAME[]  = {"SINE", "TRIANGLE", "SQUARE", "SAW", "RAMP", "NOISE"};
 
-byte      ENVELOPE        = 0;
+byte      ENVELOPE        = 1;
 //#define   ENVELOPE        ENVELOPE0     // clavecin
 //#define   ENVELOPE        ENVELOPE1     // organ
 //#define   ENVELOPE        ENVELOPE2     //
