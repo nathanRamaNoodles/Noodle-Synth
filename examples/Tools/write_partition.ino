@@ -23,7 +23,7 @@
 
 
 #define SERIAL_SPEED        115200
-
+#define SCREEN_SCROLL       0 // 80
 
 
 #include "Dsongs.h"
@@ -59,6 +59,9 @@ byte      ENVELOPE        = 1;
 //#define   ENVELOPE        ENVELOPE2     //
 //#define   ENVELOPE        ENVELOPE3     // flute
 
+byte      SUSTAINS        = 1;
+const char* SUSTAIN_NAME[] = {"NONE", "SUSTAIN", "REVERSE"};
+
 
 
 bool      playRepeat      = false;
@@ -83,6 +86,9 @@ void setup()
 
   pinMode(LED_BUILTIN,    OUTPUT);      // set the led pin
   digitalWrite(PIN_MUTE,  LOW);         // un-mute the amplifier (optional)
+
+  track1.begin(CHAN, SHAPE, ENVELOPE, 0);
+  track2.begin(CHAN, SHAPE, ENVELOPE, 0);
  
   clearScreen();
   printInstructions();
@@ -98,6 +104,8 @@ void loop()
 {
   track1.update();
   track2.update();
+
+  //while(true);
   
   ledBlink();
 
@@ -145,8 +153,10 @@ void loop()
 
 void setSong(unsigned long skip)
 {
-  track1.newSong((byte*)pgm_read_ptr(&SONG_TABLE[song2play][0])).begin(CHAN, SHAPE, ENVELOPE, 0);
-  track2.newSong((byte*)pgm_read_ptr(&SONG_TABLE[song2play][1])).begin(CHAN, SHAPE, ENVELOPE, 0);
+  //track1.newSong((byte*)pgm_read_ptr(&SONG_TABLE[song2play][0])).begin(CHAN, SHAPE, ENVELOPE, 0);
+  //track2.newSong((byte*)pgm_read_ptr(&SONG_TABLE[song2play][1])).begin(CHAN, SHAPE, ENVELOPE, 0);
+  track1.newSong((byte*)pgm_read_ptr(&SONG_TABLE[song2play][0]));
+  track2.newSong((byte*)pgm_read_ptr(&SONG_TABLE[song2play][1]));
 
   //track1.overrideSustain(true);
   //track1.setSustain(NONE);
@@ -187,6 +197,14 @@ void setSongEnvelope()
 {
   track1.setEnvelope(ENVELOPE);
   track2.setEnvelope(ENVELOPE);
+}
+
+void setSongSustain()
+{
+  track1.overrideSustain(true);
+  track2.overrideSustain(true);
+  track1.setSustain(SUSTAINS);
+  track2.setSustain(SUSTAINS);
 }
 
 void ledBlink()
@@ -252,7 +270,7 @@ void commands()
         setRepeat();
         break;
         
-      case 's':
+      case 'w':
         SHAPE = (++SHAPE) % 6;
         setSongShape();
         break;
@@ -262,13 +280,18 @@ void commands()
         setSongEnvelope();
         break;
         
-      case 'w':
+      case 's':
+        SUSTAINS = (++SUSTAINS) % 3;
+        setSongSustain();
+        break;
+        
+      case 'x':
         showPartition(true, false);
         printInstructions();
         return;
         break;
         
-      case 'x':
+      case 'y':
         showPartition(false, false);
         printInstructions();
         return;
@@ -296,26 +319,27 @@ void setRepeat()
 // =========================================================
 
 void printInstructions()
-{
+{ 
   printLine();
   Serial.print(F("Selected song : ======= ")); Serial.print(song2play + 1); Serial.println(F(" =======")); 
   Serial.println(F("Type :"));
   printInstrItem(); Serial.print(F("a number] to select a song from 1 to ")); Serial.println(SONG_TABLE_MAX);
   printInstrItem(); Serial.print(F("p] to Play/Pause")); printInstrParam(); Serial.println((track1.isPaused()) ? F("PAUSE") : F("PLAY"));
-  printInstrItem(); Serial.println(F("f] to skip forward (10s)."));
-  printInstrItem(); Serial.print(F("b] to play  backward")); printInstrValid(track1.isBackwards());
+  printInstrItem(); Serial.println(F("f] to Skip FORWARD (10s)."));
+  printInstrItem(); Serial.print(F("b] to Play  BACKWARD")); printInstrValid(track1.isBackwards());
   printInstrItem(); Serial.print(F("r] to REPEAT song(s)")); printInstrValid(playRepeat);
   printInstrItem(); Serial.print(F("a] to play ALL songs")); printInstrValid(playAll);
-  printInstrItem(); Serial.print(F("s] to cycle the wave SHAPE (6)")); printInstrParam(); Serial.println(SHAPE_NAME[SHAPE]);
-  printInstrItem(); Serial.print(F("e] to cycle the ENVELOPES  (4)")); printInstrParam(); Serial.print(F("ENVELOPE")); Serial.println(ENVELOPE);
-  printInstrItem(); Serial.println(F("w] to show PARTITION of the song"));
-  printInstrItem(); Serial.println(F("x] to show NOTES from the song"));
+  printInstrItem(); Serial.print(F("w] to cycle the WAVE shapes (6)")); printInstrParam(); Serial.println(SHAPE_NAME[SHAPE]);
+  printInstrItem(); Serial.print(F("e] to cycle the ENVELOPES   (4)")); printInstrParam(); Serial.print(F("ENVELOPE")); Serial.println(ENVELOPE);
+  printInstrItem(); Serial.print(F("s] to cycle the SUSTAINS    (3)")); printInstrParam(); Serial.println(SUSTAIN_NAME[SUSTAINS]);
+  printInstrItem(); Serial.println(F("x] to show Music SHEET of the song"));
+  printInstrItem(); Serial.println(F("y] to show NOTES from the song"));
   printLine();
 }
 
 void clearScreen()
 {
-  byte num = 80;
+  byte num = SCREEN_SCROLL;
   while (num--) Serial.println();
 }
 
