@@ -9,7 +9,7 @@ Moded:
  - added an example in `examples/Tools/write_partition.ino` to play with settings and to write back a music sheet from the RTTL string
 
 ToDO:
- - make to `reverse sustain` to sound better
+ - make `reverse sustain` to sound better
  - make an `autoPlay();` function for a song to be fully played without to call `update();`
  - minor bug to correct when changing forward/backward when playing a song (lost the index)
 
