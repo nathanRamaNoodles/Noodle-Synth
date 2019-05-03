@@ -321,12 +321,13 @@ void setRepeat()
 void printSettings()
 {
   printLine();
-  Serial.println(F("Basic settings for instruments:"));
-  printInstrItem(); Serial.print(F("organ]   ")); printSetShape(); Serial.print(F("SINE    ")); printSetEnv(); Serial.println(F("0"));
-  printInstrItem(); Serial.print(F("piano]   ")); printSetShape(); Serial.print(F("TRIANGLE")); printSetEnv(); Serial.println(F("0"));
-  printInstrItem(); Serial.print(F("saxo]    ")); printSetShape(); Serial.print(F("RAMP/SAW")); printSetEnv(); Serial.println(F("1"));
-  printInstrItem(); Serial.print(F("clarinet]")); printSetShape(); Serial.print(F("SQUARE  ")); printSetEnv(); Serial.println(F("1"));
-  printInstrItem(); Serial.print(F("flute]   ")); printSetShape(); Serial.print(F("TRIANGLE")); printSetEnv(); Serial.println(F("1"));
+  Serial.println(F("Basic settings for instruments :"));
+  printInstrItem(); Serial.print(F("organ]      ")); printSetShape(); Serial.print(F("SINE    ")); printSetEnv(); Serial.println(F("0"));
+  printInstrItem(); Serial.print(F("piano]      ")); printSetShape(); Serial.print(F("TRIANGLE")); printSetEnv(); Serial.println(F("0"));
+  printInstrItem(); Serial.print(F("harpsichord]")); printSetShape(); Serial.print(F("SQUARE  ")); printSetEnv(); Serial.println(F("0"));
+  printInstrItem(); Serial.print(F("trumpet]    ")); printSetShape(); Serial.print(F("RAMP/SAW")); printSetEnv(); Serial.println(F("2"));
+  printInstrItem(); Serial.print(F("clarinet]   ")); printSetShape(); Serial.print(F("SQUARE  ")); printSetEnv(); Serial.println(F("1"));
+  printInstrItem(); Serial.print(F("flute]      ")); printSetShape(); Serial.print(F("TRIANGLE")); printSetEnv(); Serial.println(F("1"));
 }
 
 void printInstructions()
@@ -337,7 +338,7 @@ void printInstructions()
   Serial.println(F("Type :"));
   printInstrItem(); Serial.print(F("a number] to select a song from 1 to ")); Serial.println(SONG_TABLE_MAX);
   printInstrItem(); Serial.print(F("p] to Play/Pause")); printInstrParam(); Serial.println((track1.isPaused()) ? F("PAUSE") : F("PLAY"));
-  printInstrItem(); Serial.println(F("f] to Skip FORWARD (10s)."));
+  printInstrItem(); Serial.println(F("f] to Skip FORWARD (+10s)."));
   printInstrItem(); Serial.print(F("b] to Play  BACKWARD")); printInstrValid(track1.isBackwards());
   printInstrItem(); Serial.print(F("r] to REPEAT song(s)")); printInstrValid(playRepeat);
   printInstrItem(); Serial.print(F("a] to play ALL songs")); printInstrValid(playAll);
