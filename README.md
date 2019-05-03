@@ -1,7 +1,12 @@
 Moded:
- - reduced code size (actually 2606 bytes saved!!!). Use a new function to compute a note and some minor optimization.
- - reduced table arrays, especially sinusoid one, we only need 1/4 of a cycle long.
- - solved a bug with flat and sharp in the header. Bad reset for the arrays, calling for a new song may force global sharp or flat note from precedant song.
+ - reduced code size (actually more than 2606 bytes saved!!!). Use a new function to compute a note and some minor optimization
+ - reduced table arrays, especially sinusoid one, we only need 1/4 of a cycle long
+ - solved a bug with flat and sharp in the header. Bad reset for the arrays, calling for a new song may force global sharp or flat note from precedant song
+ - made a working slurring note
+ - normalized sound volume for every settings, modifying wave computing and envelopes tables
+ - added `byte getSustain();` function, to return current sustain value
+ - added `void setEnvelope(byte env);` function, to set the envelope while playing a song
+ - added an example in `exaples/tools` to play with settings and to write back a music sheet from the RTTL string
 
 I first worked on the v4.0.0, but this version is bigger than the v3.5.14 and I care for RAM too much, so... ;). However the modification made for the v3.5.14 can easy be transposed to the v4.0.0.
 
