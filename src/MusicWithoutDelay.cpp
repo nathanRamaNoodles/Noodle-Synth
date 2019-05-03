@@ -47,52 +47,14 @@ bool              firstTime;                // can be replaced by 'start' ??????
 
 
 
-//byte* pInstrument[maxVOICES];
-//int pInstrument[maxVOICES];
-//byte* pInstrument[4];
-//long pInstrument[4];
-//char pInstrument[4];
-//MusicWithoutDelay *pInstrument[4];
-byte* pInstrument[4];
-
-/*
-typedef void (MusicWithoutDelay::*MWD_fnc_ptr)();
-//update_fnc_ptr fnc_ptr = &MusicWithoutDelay::update; 
-MWD_fnc_ptr pInstrument[4];
-//*/
-/*
-void (MusicWithoutDelay::*pInstrument[4])();
-//*/
-
-#define CALL_MEMBER_FN(object, ptr2Member)   ((object).*(ptr2Member))
-
-
-
 void autoUpdate(uint8_t voice)
 {
   ;
-  //MusicWithoutDelay&  MusicWithoutDelay::update();
-  //pInstrument[globalInstrument].delay();
-  //pInstrument[voice]->update();
-  //pInstrument[voice];
-  //Serial.print(voice); Serial.print(", ");
-  //Serial.print((byte*)pInstrument[globalInstrument]);
-  //Serial.print((word)(char)pInstrument[globalInstrument]);
-  //Serial.println();
-
-  //CALL_MEMBER_FN(fred, a[memFnNum]) ('x', 3.14);
 }
 
 
 MusicWithoutDelay::MusicWithoutDelay(const char *p)
 {
-  /*
-  default_dur     = 1;  //eqivalent to a wholenote    =====> placed in 'newSong(const char *p)'
-  default_oct     = 4;
-  bpm             = 100;
-  wholenote       = (60 * 1000L / bpm) * 4;
-  //*/
-  
   myInstrument    = globalInstrument;
   globalInstrument++;
   edgar.setNumVoices(globalInstrument);
@@ -103,10 +65,6 @@ MusicWithoutDelay::MusicWithoutDelay(const char *p)
 
 MusicWithoutDelay::MusicWithoutDelay()
 {
-
-  //pInstrument[globalInstrument] = (this.*fnc_ptr)(); 
-
-  
   myInstrument    = globalInstrument;
   globalInstrument++;
   edgar.setNumVoices(globalInstrument);
@@ -117,36 +75,6 @@ MusicWithoutDelay::MusicWithoutDelay()
 
 MusicWithoutDelay& MusicWithoutDelay::begin(byte mode, byte waveForm, byte envelope, int mod)
 {
-  //pInstrument[globalInstrument] = (byte*)& MusicWithoutDelay::update();
-  //pInstrument[globalInstrument] = (byte*)& MusicWithoutDelay::update();
-  //pInstrument[globalInstrument] = (byte*)update();
-  //pInstrument[globalInstrument] = (byte*)this;
-  //pInstrument[globalInstrument] = this;
-  //pInstrument[globalInstrument] = *this;
-  //pInstrument[globalInstrument] = (byte*)&MusicWithoutDelay::update
-  //pInstrument[globalInstrument] = (byte*)&this::update;
-  //pInstrument[globalInstrument] = (byte*)this;
-  //pInstrument[myInstrument] = (byte*)this;
-  /*
-  pInstrument[myInstrument] = (byte*)this->update();
-  //*/
-  
-  //pInstrument[myInstrument] = &MusicWithoutDelay::update;
-  //pInstrument[myInstrument] = &this::update;
-  //pInstrument[myInstrument] = *update();
-  
-  //Serial.print("create pointer "); Serial.print(myInstrument); Serial.print(", "); Serial.println((word)(char)pInstrument[myInstrument]);
-  //delay (200);
-  //*/
-
-  
-  
-
-  
-
-
-  
-
   edgar.begin(myInstrument, mode);
   edgar.setupVoice(myInstrument, waveForm, 60, envelope, 70, mod + 64);
   sustain = SUSTAIN;
