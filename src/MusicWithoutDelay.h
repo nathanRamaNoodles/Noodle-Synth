@@ -33,16 +33,14 @@
 
 
 
-static synth edgar;
+static  synth   edgar;
 
 
 
-#define twelveRoot 1.059463094359
-
-
+#define twelveRoot    1.059463094359
 
 #define NOTE_B0  23
-#define NOTE_C1  24
+#define NOTE_C1  24   // === octave 1
 #define NOTE_CS1 25
 #define NOTE_D1  26
 #define NOTE_DS1 27
@@ -54,7 +52,7 @@ static synth edgar;
 #define NOTE_A1  33
 #define NOTE_AS1 34
 #define NOTE_B1  35
-#define NOTE_C2  36
+#define NOTE_C2  36   // === octave 2
 #define NOTE_CS2 37
 #define NOTE_D2  38
 #define NOTE_DS2 39
@@ -66,7 +64,7 @@ static synth edgar;
 #define NOTE_A2  45
 #define NOTE_AS2 46
 #define NOTE_B2  47
-#define NOTE_C3  48
+#define NOTE_C3  48   // === octave 3
 #define NOTE_CS3 49
 #define NOTE_D3  50
 #define NOTE_DS3 51
@@ -78,7 +76,7 @@ static synth edgar;
 #define NOTE_A3  57
 #define NOTE_AS3 58
 #define NOTE_B3  59
-#define NOTE_C4  60  //middle C
+#define NOTE_C4  60   // middle C, octave 4
 #define NOTE_CS4 61
 #define NOTE_D4  62
 #define NOTE_DS4 63
@@ -90,7 +88,7 @@ static synth edgar;
 #define NOTE_A4  69
 #define NOTE_AS4 70
 #define NOTE_B4  71
-#define NOTE_C5  72
+#define NOTE_C5  72   // === octave 5
 #define NOTE_CS5 73
 #define NOTE_D5  74
 #define NOTE_DS5 75
@@ -102,7 +100,7 @@ static synth edgar;
 #define NOTE_A5  81
 #define NOTE_AS5 82
 #define NOTE_B5  83
-#define NOTE_C6  84
+#define NOTE_C6  84   // === octave 6
 #define NOTE_CS6 85
 #define NOTE_D6  86
 #define NOTE_DS6 87
@@ -114,7 +112,7 @@ static synth edgar;
 #define NOTE_A6  93
 #define NOTE_AS6 94
 #define NOTE_B6  95
-#define NOTE_C7  96
+#define NOTE_C7  96   // === octave 7
 #define NOTE_CS7 97
 #define NOTE_D7  98
 #define NOTE_DS7 99
@@ -126,11 +124,12 @@ static synth edgar;
 #define NOTE_A7  105
 #define NOTE_AS7 106
 #define NOTE_B7  107
-#define NOTE_C8  108
+#define NOTE_C8  108  // === octave 8
 #define NOTE_CS8 109
 #define NOTE_D8  110
 #define NOTE_DS8 111
 //That took a while to get all the notes
+
 
 
 class MusicWithoutDelay
@@ -149,8 +148,8 @@ class MusicWithoutDelay
     MusicWithoutDelay&  skipTo(long index);
     MusicWithoutDelay&  play();
     MusicWithoutDelay&  play(int repeat);
-    MusicWithoutDelay&  overrideSustain(bool v);
-    MusicWithoutDelay&  setSustain(byte v);
+    MusicWithoutDelay&  overrideSustain(bool value);
+    MusicWithoutDelay&  setSustain(byte value);
     MusicWithoutDelay&  setOctave(byte oct);
     MusicWithoutDelay&  setBPM(int tempo);
     MusicWithoutDelay&  setMod(int percent);
@@ -166,6 +165,7 @@ class MusicWithoutDelay
     long                getCurrentTime();
     byte                getOctave();
     int                 getBPM();
+    byte                getSustain();
     bool                isSustainOverrided();
     bool                isSingleNote();
     bool                isMuted();
@@ -178,7 +178,7 @@ class MusicWithoutDelay
 
   private:
     void                _getCodeNote();
-    void                _setCodeNote();
+    void                _setCodeNote(uint16_t slur_loc);
     bool                _isNoteDelimiter(uint16_t pointer);
     double              _skipSolver();
     
@@ -208,6 +208,7 @@ class MusicWithoutDelay
     uint8_t             note;             // current note to play
     uint32_t            duration;         // current duration for a note to play
     int8_t              scale;            // current octave for a note to play
+    uint8_t             sustain;          // current sustain
     
     uint8_t             num;              // var
     uint8_t             mRepeat;          // how many times to repeat a song
@@ -216,6 +217,8 @@ class MusicWithoutDelay
     bool                resume, delayer, start, finish, skip, reversed, wasPlaying, wasEnd, oneTime, 
                               beat, isMute, sustainControl, flagRepeat, playSingleNote;
 };
+
+void autoUpdate(uint8_t voice);
 
 #endif
 
