@@ -23,7 +23,7 @@
 
 
 #define SERIAL_SPEED        115200
-#define SCREEN_SCROLL       0 // 80
+#define SCREEN_SCROLL       80
 
 
 #include "Dsongs.h"
