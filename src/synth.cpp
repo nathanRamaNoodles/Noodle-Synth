@@ -203,11 +203,6 @@ void        ICACHE_RAM_ATTR onTimerISR()
     if (!(((unsigned char*)&EPCW[divider])[1] & 0x80))
     {
       uint8_t value = (((unsigned char*)&(EPCW[divider] += EFTW[divider]))[1]);
-
-      if (autoPlay && value <= 0)
-      {
-        autoUpdate(divider);
-      }
       
       switch (sustainIt[divider])
       {
