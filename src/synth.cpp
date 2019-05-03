@@ -1,7 +1,7 @@
 #include "Arduino.h"
 #include "synth.h"
 
-
+#include "MusicWithoutDelay.h"
 
 //MaxVoices settings (This increases memory usage, 22+ bytes per voice)
 #if   defined(__AVR_ATmega2560__)
@@ -17,20 +17,20 @@
 #endif
 //end of MaxVoice settings
 
+static uint8_t        autoPlay = true;
 
-
-static uint16_t       PCW[maxVOICES];		  	  //-Wave phase accumolators
-static uint16_t       FTW[maxVOICES];         //-Wave frequency tuning words
-static uint8_t        AMP[maxVOICES];         //-Wave amplitudes [0-255]
-static uint16_t       PITCH[maxVOICES];       //-Voice pitch
-static int8_t         MOD[maxVOICES];         //-Voice envelope modulation [0-1023 512=no mod. <512 pitch down >512 pitch up]
-static uint8_t        wavs[maxVOICES];        //-Wave table selector [address of wave in memory]
+static uint16_t       PCW[maxVOICES];		  	  //-Wave phase accumolators [word]
+static uint16_t       FTW[maxVOICES];         //-Wave frequency tuning [word]
+static uint8_t        AMP[maxVOICES];         //-Wave amplitudes [0~255]
+static uint16_t       PITCH[maxVOICES];       //-Voice pitch [word]
+static int8_t         MOD[maxVOICES];         //-Voice envelope modulation [-64~63, 0=no mod. <-64 pitch down >63 pitch up]
+static uint8_t        wavs[maxVOICES];        //-Wave table selector, mod for each voice [0~6]
 static uint16_t       envs[maxVOICES];        //-Envelopte selector [address of envelope in memory]
-static uint16_t       EPCW[maxVOICES];        //-Envelope phase accumolator
-static uint16_t       EFTW[maxVOICES];        //-Envelope speed tuning word
-static uint16_t       sustainIt[maxVOICES];   //-sustain variables
-static uint16_t       revSustain[maxVOICES];  //-sustain variables
-static uint16_t       volume[maxVOICES];      //-volume variables
+static uint16_t       EPCW[maxVOICES];        //-Envelope phase accumolator [word]
+static uint16_t       EFTW[maxVOICES];        //-Envelope speed tuning (duration) [word] 
+static uint8_t        sustainIt[maxVOICES];   //-sustain variables, mod for each voice [0~4]
+static uint16_t       revSustain[maxVOICES];  //-sustain variables (for reversed mod)
+static uint8_t        volume[maxVOICES];      //-volume variables [0~127]
 
 static uint8_t        divider   = maxVOICES;  //-Sample rate decimator for envelope
 static uint16_t       tim       = 0;
@@ -41,30 +41,29 @@ static uint16_t       numVoice;
 // Timer 0, used by milllis(), micros(), delay(), PWM pin 5 & 6
 // Timer 1, used by Servo library, PWM pin 9 & 10, (10 SPI CS)
 // Timer 2, used by tone(), PWM pin 3 & 11, (11 SPI MOSI)
-//
-//    Timer 0   Timer 1   Timer 2   Rôle
-//    ---------------------------------------------------------
-//    TCNT0     TCNT1L    TCNT2     Timer (bit 0 à 7)
-//    -         TCNT1H    -         Timer (bit 8 à 15)
-//    TCCR0A    TCCR1A    TCCR2A    Registre de contrôle
-//    TCCR0B    TCCR1B    TCCR2B    Registre de contrôle
-//    -         TCCR1C    -         Registre de contrôle
-//    OCR0A     OCR1AL    OCR2A     Output Compare (bit 0 à 7)
-//    -         OCR1AH    -         Output Compare (bit 8 à 15)
-//    OCR0B     OCR1BL    OCR2B     Output Compare (bit 0 à 7)
-//    -         OCR1BH    -         Output Compare (bit 8 à 15)
-//    TIMSK0    TIMSK1    TIMSK2    Interrupt Mask
-//    TIFR0     TIFR1     TIFR2     Interrupt Flag
+//        Timer 0   Timer 1   Timer 2   Rôle
+//        ---------------------------------------------------------
+//        TCNT0     TCNT1L    TCNT2     Timer (bit 0 à 7)
+//        -         TCNT1H    -         Timer (bit 8 à 15)
+//        TCCR0A    TCCR1A    TCCR2A    Registre de contrôle
+//        TCCR0B    TCCR1B    TCCR2B    Registre de contrôle
+//        -         TCCR1C    -         Registre de contrôle
+//        OCR0A     OCR1AL    OCR2A     Output Compare (bit 0 à 7)
+//        -         OCR1AH    -         Output Compare (bit 8 à 15)
+//        OCR0B     OCR1BL    OCR2B     Output Compare (bit 0 à 7)
+//        -         OCR1BH    -         Output Compare (bit 8 à 15)
+//        TIMSK0    TIMSK1    TIMSK2    Interrupt Mask
+//        TIFR0     TIFR1     TIFR2     Interrupt Flag
 #if   defined(__AVR_ATmega32U4__)
-#  define     mTCCR2A       TCCR4A
+#  define     mTCCR2A       TCCR4A      // use timer4
 #  define     mTCCR2B       TCCR4B
 #  define     mOCR2A        OCR4D
-#  if   defined(CORE_TEENSY)      // Teensy 2.0
+#  if   defined(CORE_TEENSY)        // Teensy 2.0
 #    define   speaker_Pin   A9
-#  else                           // Sparkfun Pro Micro
+#  else                             // Sparkfun Pro Micro
 #    define   speaker_Pin   6
 #  endif
-#elif defined(__AVR__)            //////////AVRs///////////
+#elif defined(__AVR__)              //////////AVRs///////////
 #  define     mTCCR2A       TCCR2A      // use timer2
 #  define     mTCCR2B       TCCR2B
 #  define     mOCR2A        OCR2A
@@ -78,21 +77,21 @@ static uint16_t       numVoice;
 #  endif
 
 static uint8_t        stereoMode[maxVOICES];    // stereo variables
-static uint8_t        differentVoicesA          = 0;   // number of voices per output
+static uint8_t        differentVoicesA          = 0;      // number of voices per output on CHA
 static uint8_t        differentVoicesB          = 0;
-static uint8_t        maxVolume[maxVOICES]      = {0};
-static uint8_t        volumeSetupCounter        = 0;
+static uint8_t        maxVolume[maxVOICES]      = {0};    // max volume reference for each voice (used when setting volume) [0~127]
+static uint8_t        volumeSetupCounter        = 0;      // just a flag to calcul maxVolume[] only one time
 
 #elif defined(__arm__) && defined(TEENSYDUINO)
 static void           timerInterrupt();
-static                IntervalTimer sampleTimer;
+static IntervalTimer  sampleTimer;
 static uint8_t        sample[maxVOICES];
-static uint8_t        originalOutput[maxVOICES] = {0};  // voices that initiate the output
-static uint8_t        sameOutput[maxVOICES]     = {0};  // voices that share the same output with the originalOutput
-static uint8_t        stereoMode[maxVOICES];            // outPut pin locations
+static uint8_t        originalOutput[maxVOICES] = {0};    // voices that initiate the output
+static uint8_t        sameOutput[maxVOICES]     = {0};    // voices that share the same output with the originalOutput
+static uint8_t        stereoMode[maxVOICES];              // outPut pin locations
 static uint8_t        differentVoices           = 0;
-static uint8_t        maxVolume[maxVOICES]      = {0};
-static uint8_t        volumeSetupCounter        = 0;
+static uint8_t        maxVolume[maxVOICES]      = {0};    // max volume reference for each voice (used when setting volume) [0~127]
+static uint8_t        volumeSetupCounter        = 0;      // just a flag to calcul maxVolume[] only one time
 
 #elif defined(ESP8266)
 uint32_t              i2sACC;
@@ -118,13 +117,17 @@ int8_t _getWaveValue(uint8_t voice, uint8_t value)
       if (         value  > 1)  r   = -r;                  
       break;
     case SQUARE:      //  127             127,-127             -127,127
-      r       = char((value < 128) ? 127 : - 127);
+      //r       = char((value < 128) ? 127 : - 127);
+      //r       = char((value < 128) ? 48 : - 48);
+      r       = char((value < 128) ? 56 : - 56);
       break;
-    case SAW:         //  127                 0                    -128   !! -128~127
-      r       = char(127 - value);
+    case SAW:         //  127                 0                    -128   !! -128~127s
+      //r       = char(127 - value);
+      r       = 2 * char(127 - value) / 3;
       break;
     case RAMP:        //  -128                0                     127   !! -128~127
-      r       = char(value - 128);
+      //r       = char(value - 128);
+      r       = 2 * char(value - 128) / 3;
       break;
     case NOISE:       //  xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
       pWaveTable                  = (unsigned int)NoiseTable;  
@@ -146,7 +149,7 @@ int8_t _getWaveValue(uint8_t voice, uint8_t value)
 
 int8_t _getEnvValue(int8_t value)
 {
-  value  = (value * -1) + volume[divider];
+  value  = volume[divider] - value;
   return value + (((unsigned char*) &(EPCW[divider] += EFTW[divider]))[1]);
 }
 
@@ -199,49 +202,43 @@ void        ICACHE_RAM_ATTR onTimerISR()
     //-------------------------------
     if (!(((unsigned char*)&EPCW[divider])[1] & 0x80))
     {
-      uint8_t value = (((unsigned char*) &(EPCW[divider] += EFTW[divider]))[1]);
+      uint8_t value = (((unsigned char*)&(EPCW[divider] += EFTW[divider]))[1]);
+
+      if (autoPlay && value <= 0)
+      {
+        autoUpdate(divider);
+      }
       
       switch (sustainIt[divider])
       {
+        case NONE:
+          value  = _getEnvValue(value);
+          //value  = volume[divider] - value;
+          //value += (((unsigned char*)&(EPCW[divider] += EFTW[divider]))[1]);
+          break;
         case SUSTAIN:           //default
           if (value < volume[divider])
           {
             value  = _getEnvValue(value);
-            //value  = (value * -1) + volume[divider];
-            //value += (((unsigned char*) &(EPCW[divider] += EFTW[divider]))[1]);
           }
           break;
         case REV_SUSTAIN:
-          if (volume[divider] >= 70)
+          if      (volume[divider] >= 70)
           {
             if (value < volume[divider])
             {
-              value  = _getEnvValue(value);
-              //value  = (value * -1) + volume[divider];
-              //value += (((unsigned char*) &(EPCW[divider] += EFTW[divider]))[1]);
+              //value  = _getEnvValue(value);
+              //value  = _getEnvValue(127 - value);
+              value  = _getEnvValue(sizeof(Env0) - value);
             }
           }
           else if (value < revSustain[divider])
           {
-            value = (value * -1) + revSustain[divider];
+            value = revSustain[divider] - value;
             if (value < volume[divider])
             {
-              //value  = (value);
               value += (((unsigned char*) &(EPCW[divider] += EFTW[divider]))[1]);
             }
-          }
-          break;
-        case NONE:
-          value  = _getEnvValue(value);
-          //value  = (value * -1) + volume[divider];
-          //value += (((unsigned char*) &(EPCW[divider] += EFTW[divider]))[1]);
-          break;
-        case SLUR:
-          if (value > 24)   // sounds like best results from 16~32
-          {
-            value  = _getEnvValue(value);
-            //value  = (value * -1) + volume[divider];
-            //value += (((unsigned char*) &(EPCW[divider] += EFTW[divider]))[1]);
           }
           break;
       }
@@ -263,7 +260,8 @@ void        ICACHE_RAM_ATTR onTimerISR()
     for (uint8_t i = 0; i < numVoice; i++)
     {
       //sample += ((((signed char)pgm_read_byte(wavs[i] + ((unsigned char *) & (PCW[i] += FTW[i]))[1]) * AMP[i]) >> 8) >> 2);
-      sample += (((_getWaveValue(i, ((unsigned char *) & (PCW[i] += FTW[i]))[1]) * AMP[i]) >> 8) >> 2);
+      //sample += (_getWaveValue(i, ((unsigned char *)&(PCW[i] += FTW[i]))[1]) * AMP[i]) >> 10;
+      sample += (_getWaveValue(i, ((unsigned char *)&(PCW[i] += FTW[i]))[1]) * AMP[i]) >> 9;
     }
     analogWrite(speaker_Pin, sample);  //The pro micro has a 10 bit timer, so analogWrite can shrink it to 8 bit
 
@@ -272,8 +270,8 @@ void        ICACHE_RAM_ATTR onTimerISR()
     for (uint8_t i = 0; i < numVoice; i++)
     {
       //sample += ((((signed char)pgm_read_byte((const void *)(wavs[i] + ((unsigned char *) & (PCW[i] += FTW[i]))[1])) * AMP[i]) >> 8) >> 2);
-      //sample += (((_getWaveValue((const void *)(i, ((unsigned char *) & (PCW[i] += FTW[i]))[1])) * AMP[i]) >> 8) >> 2);
-      sample += (((_getWaveValue((const void *)(i, ((unsigned char *) & (PCW[i] += FTW[i]))[1])) * AMP[i]) >> 8) >> 2);
+      //sample += (_getWaveValue((const void *)(i, ((unsigned char *)&(PCW[i] += FTW[i]))[1])) * AMP[i]) >> 10;
+      sample += (_getWaveValue((const void *)(i, ((unsigned char *)&(PCW[i] += FTW[i]))[1])) * AMP[i]) >> 9;
     }
     DAC = map(sample, 0, 255, 0, 65538);
 
@@ -298,15 +296,17 @@ void        ICACHE_RAM_ATTR onTimerISR()
     uint8_t shared = 127;
     for (uint8_t i = 0; i < numVoice; i++)
     {
-      if (stereoMode[i] == 0)
+      if (stereoMode[i])
       {
-        //sample += ((((signed char)pgm_read_byte(wavs[i] + ((unsigned char *) & (PCW[i] += FTW[i]))[1]) * AMP[i]) >> 8) >> 2);
-        sample += (((_getWaveValue(i, ((unsigned char *) &(PCW[i] += FTW[i]))[1]) * AMP[i]) >> 8) >> 2);
+        //shared += ((((signed char)pgm_read_byte(wavs[i] + ((unsigned char *) & (PCW[i] += FTW[i]))[1]) * AMP[i]) >> 8) >> 2);
+        //shared += (_getWaveValue(i, ((unsigned char *)&(PCW[i] += FTW[i]))[1]) * AMP[i]) >> 10;
+        shared += (_getWaveValue(i, ((unsigned char *)&(PCW[i] += FTW[i]))[1]) * AMP[i]) >> 9;
       }
       else
       {
-        //shared += ((((signed char)pgm_read_byte(wavs[i] + ((unsigned char *) & (PCW[i] += FTW[i]))[1]) * AMP[i]) >> 8) >> 2);
-        shared += (((_getWaveValue(i, ((unsigned char *) &(PCW[i] += FTW[i]))[1]) * AMP[i]) >> 8) >> 2);
+        //sample += ((((signed char)pgm_read_byte(wavs[i] + ((unsigned char *) & (PCW[i] += FTW[i]))[1]) * AMP[i]) >> 8) >> 2);
+        //sample += (_getWaveValue(i, ((unsigned char *)&(PCW[i] += FTW[i]))[1]) * AMP[i]) >> 10;
+        sample += (_getWaveValue(i, ((unsigned char *)&(PCW[i] += FTW[i]))[1]) * AMP[i]) >> 9;
       }
     }
     mOCR2A = sample;
@@ -320,9 +320,11 @@ void        ICACHE_RAM_ATTR onTimerISR()
     
     for (uint8_t i = 0; i < numVoice; i++)
     {
-      uint8_t giveME = (sameOutput[i] != 0) ? sameOutput[i] : originalOutput[i]; //Here is the most important part; I connect the voices that share the same output pin :)
+      //Here is the most important part; I connect the voices that share the same output pin :)
+      uint8_t giveME = (sameOutput[i] != 0) ? sameOutput[i] : originalOutput[i];
       //sample[giveME] += ((((signed char)pgm_read_byte(wavs[i] + ((unsigned char *) & (PCW[i] += FTW[i]))[1]) * AMP[i]) >> 8) >> 2); //update wave
-      sample[giveME] += (((_getWaveValue(i, ((unsigned char *) &(PCW[i] += FTW[i]))[1]) >> 2)) * AMP[i]) >> 8) >> 2); //update wave
+      //sample[giveME] += (((_getWaveValue(i, ((unsigned char *)&(PCW[i] += FTW[i]))[1]) >> 2)) * AMP[i]) >> 10; //update wave
+      sample[giveME] += (((_getWaveValue(i, ((unsigned char *)&(PCW[i] += FTW[i]))[1]) >> 2)) * AMP[i]) >> 9; //update wave
     }
     
     for (uint8_t i = 0; i < numVoice; i++)
@@ -342,7 +344,7 @@ void        ICACHE_RAM_ATTR onTimerISR()
   //************************************************
   //  Modulation engine
   //************************************************
-  FTW[divider] = PITCH[divider] + (int)(((PITCH[divider] / 64) * (EPCW[divider] / 64)) / 128) * MOD[divider];
+  //FTW[divider] = PITCH[divider] + (int)(((PITCH[divider] / 64) * (EPCW[divider] / 64)) / 128) * MOD[divider];
   FTW[divider] = PITCH[divider] + (int)(((PITCH[divider] >> 6) * (EPCW[divider] >> 6)) / 128) * MOD[divider];
   tim++;
 }
@@ -351,16 +353,26 @@ void        ICACHE_RAM_ATTR onTimerISR()
 
 
 
+
+//*********************************************************************
+//  constructor
+//*********************************************************************
+
 synth::synth() {}
 
 
+
+
+//*********************************************************************
+//  Startup with default output modes
+//*********************************************************************
 
 void synth::begin(uint8_t voice)
 {
 #if   defined(__AVR_ATmega32U4__)
   pinMode(speaker_Pin, OUTPUT);
   cli(); // stop interrupts
-  TCCR1A  = 0x00;                         //-Start audio interrupt
+  TCCR1A  = 0x00;                         //-Set audio interrupt
   TCCR1B  = 0x09;
   //OCR1A   = 16000000.0 / FS_music;			  //-Auto sample rate
   OCR1A   = 16000000UL / FS_music;        //-Auto sample rate
@@ -406,14 +418,14 @@ void synth::begin(uint8_t voice, uint8_t d)
   cli();
   
 #    if defined(__AVR_ATmega2560__)
-  TCCR4A  = 0x00;                         //-Start audio interrupt
+  TCCR4A  = 0x00;                         //-Set audio interrupt
   TCCR4B  = 0x09;
   //OCR4A   = 16000000.0 / FS_music;			  //-Auto sample rate
   OCR4A   = 16000000UL / FS_music;        //-Auto sample rate
   SET(TIMSK4, OCIE4B);                    //-Start audio interrupt
   
 #    else
-  TCCR1A  = 0x00;                         //-Start audio interrupt
+  TCCR1A  = 0x00;                         //-Set audio interrupt
   TCCR1B  = 0x09;
   //OCR1A   = 16000000.0 / FS_music;			  //-Auto sample rate
   OCR1A   = 16000000UL / FS_music;        //-Auto sample rate
@@ -456,12 +468,12 @@ void synth::begin(uint8_t voice, uint8_t d)
       break;
 
 #else
-    case CHB:                                         //-Single ended signal on CHB pin (3)
+    case CHB:                               //-Single ended signal on CHB pin (3)
       stereoMode[voice] = 1;
       differentVoicesB++;
-      mTCCR2A = 0xB3;                                 //-8 bit audio PWM
-      mTCCR2B = 0x01;                                 // |
-      mOCR2B  = 127;
+      mTCCR2A           = 0xB3;             //-8 bit audio PWM
+      mTCCR2B           = 0x01;             // |
+      mOCR2B            = 127;
       
 #  if   defined(__AVR_ATmega2560__)
       pinMode(speaker_PinB, OUTPUT);
@@ -475,9 +487,9 @@ void synth::begin(uint8_t voice, uint8_t d)
     case CHA:
       stereoMode[voice] = 0;
       differentVoicesA++;
-      mTCCR2A = 0xB3;                                  //-8 bit audio PWM
-      mTCCR2B = 0x01;                                  // |
-      mOCR2A  = 127;
+      mTCCR2A           = 0xB3;             //-8 bit audio PWM
+      mTCCR2B           = 0x01;             // |
+      mOCR2A            = 127;
       
 #  if   defined(__AVR_ATmega2560__)
       pinMode(speaker_PinA, OUTPUT);
@@ -620,15 +632,16 @@ void synth::trigger(uint8_t voice)
 //  Setup Length [0-128]
 //*********************************************************************
 
-void synth::setLength(uint8_t voice, uint8_t length)
+void synth::setLength(uint8_t voice, uint8_t noteLength)
 {
 #if   defined(ESP8266)
-  EFTW[voice]       = pgm_read_word(&EFTWS[length + 10]);
-  revSustain[voice] = length + 6;
+  if (noteLength + 10 > 127) noteLength = 127;
+  EFTW[voice]       = pgm_read_word(&EFTWS[noteLength + 10]);
+  revSustain[voice] = noteLength + 6;
   
 #else
-  EFTW[voice]       = pgm_read_word(&EFTWS[length]);
-  revSustain[voice] = length;
+  EFTW[voice]       = pgm_read_word(&EFTWS[noteLength]);
+  revSustain[voice] = noteLength;
 #endif
 }
 
@@ -658,7 +671,7 @@ void synth::setVolume(uint8_t voice, uint8_t v)
 #if   defined(__arm__) && defined(TEENSYDUINO)
   if (volumeSetupCounter <= numVoice)
   { 
-    //skip the first time this method is called because we don't know how many instruments will share an output pin yet.
+    // skip the first time this method is called because we don't know how many instruments will share an output pin yet.
     if (volumeSetupCounter == numVoice)
     { 
       //one time setup to find maxVolume for each output pin
@@ -670,22 +683,22 @@ void synth::setVolume(uint8_t voice, uint8_t v)
         // Serial.println(giveME);
       }
       
-      //Calculate maxVolume for each pin.
+      // Calculate maxVolume for each pin.
       for (uint8_t i = 0; i < numVoice; i++)
       {
-        //apply formula that finds maxVolume depending on the number of voices per pin.
+        // apply formula that finds maxVolume depending on the number of voices per pin.
         //maxVolume[i] = (store[i % differentVoices] > 4) ? (127 * (((51 - store[i % differentVoices]) * 2) / 120.0)) : 127;
         //maxVolume[i] = (store[i % differentVoices] > 4) ? (127 * ((51 - store[i % differentVoices]) / 60)) : 127;
         maxVolume[i] = (store[i % differentVoices] > 4) ? (2 * (51 - store[i % differentVoices])) : 127;
         // Serial.print("Voice ");Serial.print(i);Serial.print(" , maxVolume: ");Serial.print(maxVolume[i]);Serial.print(" , numberPins: ");Serial.println(store[i%differentVoices]);
       }
     }
-    volumeSetupCounter++;  //never come back here again
+    volumeSetupCounter++;  //never come back here again, unless we will add another voice
   }
   volume[voice] = map(v, 127, 0, 127 - maxVolume[voice], 127);
 
 #elif defined(__AVR_ATmega32U4__) || defined(ESP8266)  
-  //no need to check same output, because these boards don't support Stereo mode :'(
+  // no need to check same output, because these boards don't support Stereo mode :'(
   //float maxVolume = (numVoice > 4) ? (127 * (((49 - numVoice) * 2) / 120.0)) : 127;
   //uint8_t maxVolume = (numVoice > 4) ? (127 * ((49 - numVoice) / 60)) : 127;
   uint8_t maxVolume = (numVoice > 4) ? (2 * (49 - numVoice)) : 127;
@@ -694,17 +707,17 @@ void synth::setVolume(uint8_t voice, uint8_t v)
 #else  //Uno and Mega
   if (volumeSetupCounter <= numVoice)
   { 
-    //skip the first time this method is called because we don't know how many instruments will share an output pin yet.
+    // skip the first time this method is called because we don't know how many instruments will share an output pin yet.
     if (volumeSetupCounter == numVoice)
     { 
-      //one time setup to find maxVolume for each output pin, calculate maxVolume for each pin.
+      // one time setup to find maxVolume for each output pin, calculate maxVolume for each pin.
       //float maxVolumeA = (differentVoicesA > 3) ? (127 * (((49 - differentVoicesA) * 2) / 120.0)) : 127;
       //float maxVolumeB = (differentVoicesB > 3) ? (127 * (((49 - differentVoicesB) * 2) / 120.0)) : 127;
       //uint8_t maxVolumeA = (differentVoicesA > 3) ? (127 * ((49 - differentVoicesA) / 60)) : 127;
       //uint8_t maxVolumeB = (differentVoicesB > 3) ? (127 * ((49 - differentVoicesB) / 60)) : 127;
       uint8_t maxVolumeA = (differentVoicesA > 3) ? (2 * (49 - differentVoicesA)) : 127;    // 2.11
       uint8_t maxVolumeB = (differentVoicesB > 3) ? (2 * (49 - differentVoicesB)) : 127;
-      
+
       //Calculate maxVolume for each pin.
       for (uint8_t i = 0; i < numVoice; i++)
       {
@@ -712,7 +725,7 @@ void synth::setVolume(uint8_t voice, uint8_t v)
         // Serial.print("Voice ");Serial.print(j);Serial.print(" , maxVolume: ");Serial.print(maxVolume[j]);Serial.print(" , numberPins: ");Serial.println((stereoMode[j]==0)? differentVoicesA:differentVoicesB);
       }
     }
-    volumeSetupCounter++;  //never come back here again
+    volumeSetupCounter++;  //never come back here again, unless we will add another voice
   }
   // volume[voice] = map(v, 127, 0, 0, 127);
   volume[voice] = map(v, 127, 0, 127 - maxVolume[voice], 127); //set volume using maxVolume
