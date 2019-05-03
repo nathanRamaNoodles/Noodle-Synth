@@ -6,7 +6,7 @@ Moded:
  - normalized sound volume for every settings, modifying wave computing and envelopes tables
  - added `byte getSustain();` function, to return current sustain value
  - added `void setEnvelope(byte env);` function, to set the envelope while playing a song
- - added an example in `exaples/tools` to play with settings and to write back a music sheet from the RTTL string
+ - added an example in `examples/Tools/write_partition.ino` to play with settings and to write back a music sheet from the RTTL string
 
 ToDO:
  - make to `reverse sustain` to sound better
