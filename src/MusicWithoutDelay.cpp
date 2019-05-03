@@ -350,7 +350,7 @@ void MusicWithoutDelay::_setCodeNote(uint16_t slur_loc)
   byte note_sustain;
   if (pgm_read_byte_near(mySong + slur_loc) == '+')   // a slur note, "+"
   {
-    note_dur     = 127;                                   // set length at max to prevent a cut
+    note_dur     = 120;                                   // set length at max to prevent a cut
     note_sustain = NONE;                                  // slur note is always NO sustain
   }
   else                                                // a ',' or ':' or NOTHING
