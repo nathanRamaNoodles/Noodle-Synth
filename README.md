@@ -11,7 +11,7 @@ Moded:
 ToDO:
  - make `reverse sustain` to sound better
  - make an `autoPlay();` function for a song to be fully played without to call `update();`
- - minor bug to correct when changing forward/backward when playing a song (lost the index)
+ - minor bug to correct when changing forward/backward or when using pause (lost the index)
 
 I first worked on the v4.0.0, but this version is bigger than the v3.5.14 and I care for RAM too much, so... ;). However the modification made for the v3.5.14 can easy be transposed to the v4.0.0.
 
