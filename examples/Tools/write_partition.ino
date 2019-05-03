@@ -1,853 +1,124 @@
 /*
-   Written by Eric Paquot, 04/2019
-   https://github.com/wEPac
+   Written by Eric Paquot on 03/03/2019
+  
+   Song in RTTL format to play with 'MusicWithoutDelay' from nathanRamaNoodles
+   We use 2 tracks, one for the soprano, the second one for the bass
+   Both tracks must have the same length, and to prevent lost of synchro,
+      both tracks MUST be written with the same duration (ie d=8)
+   For details on the RTTL format, look at https://github.com/nathanRamaNoodles/MusicWithoutDelay-LIbrary documentation
 
-   Just a sketch to play some RTTL ringtones on 2 voices (Soprano and Bass),
-   and a little helper to compose RTTL string.
-
-   Playing with the nice library <MusicWithoutDelay.h> by nathanRamaNoodles,
-   https://github.com/nathanRamaNoodles/Noodle-Synth, you can really play
-   nice little songs to make your arduino alive. However, writing a RTTL file,
-   we can easily do few mistakes.
-
-   This sketch is to help our job, to listen our work and to find mistakes,
-   but WITHOUT ANY WARRANTY, it must be considered like an example or a draft.
-
-   Running the Serial Monitor and following instructions from screen
-   you can :
-      - choose a song #n
-      - play / stop a song
-      - show its partition to check for error when you are composing it
-
+   Header (optional):
+      "name:d=..,o=..,b=..,s=..,f=..:"    (d)uration, (o)ctave, (b)pm, (s)harp, (f)lat
+   Partition, for each note:
+      1 2 3...      duration        (optional)
+      .             period          (optional)
+      a b... g p    letter          (!!!required)
+      # _           sharp / flat    (optional)
+      1 2...        octave          (optional)
+      , +           breath / slur   (!!!required)
 */
 
 
-#define SERIAL_SPEED        115200
-#define SCREEN_SCROLL       0 // 80
+#include <avr/pgmspace.h>
+
+
+
+const char BEEP_01[] PROGMEM = "::8c";
+
+
+
+//*
+// ==== JS Bach - Bourree in E minor - BWV996 ====
+//
+//    Soprano                                      0       1                    2                    3             4                5                     6                    7            8       9                 10               11              12       13                14                  15               16        17                   18                   19                   20           21               22            23             24
+const char SONG_11[] PROGMEM = ":d=8,o=5,b=142,s=f:p,e1,f1,4g1,f1,e1,4d#1,e1,f1,4b,c#1,d#1,4e1,d1,c1,4b,a,g,4f,g,a,b,a,g,f,4e,e1,f1,4g1,f#1,e1,4d#1,e1,f1,4b,c#1,d#1,4e1,d1,c1,4b,a,g,4.f,g,2.g,b,g,4d1,a,c1,4b,g1,d1,4e1,b,d1,4c1,b,a,4g#,a,b,4c1,b,a,2.a,d1,a,4b,g1,d1,4e1,b,d1,4a,a1,e1,4f1,c#1,e1,4d1,c#1,b,4.a#,b,2.b,b1,f1,4g#1,f1,e1,4a1,e1,g1,4f1,e1,d1,4g1,d1,f_1,4e1,a1,e1,4f1,c#1,e1,4d#1,2b,e1,b,4c1,d1,a,4b,c1,g,4a,b,f,4g,f,e,4d#,e,f,4g,f,e,2.e";
+//    Soprano with fioritures                        0       1                                      2                    3             4                5                                       6                     7                           8        9                 10               11              12       13                14                  15               16        17                    18                  19                   20           21               22             23             24
+//const char SONG_11[] PROGMEM = ":d=8,o=5,b=142,s=f:p,e1,f1,4g1,32p,16g1,32p,32f1,16.e1,4d#1,e1,f1,4b,c#1,d#1,4e1,d1,c1,4b,a,g,4f,g,a,b,a,g,f,4e,e1,f1,4g1,32p,16g1,32g1,32f1,16.e1,4d#1,e1,f1,4b,c#1,d#1,4e1,d_1,c1,4b,a,g,32f,32e,32f,4f,32p,g,2.g,b1,g,4d1,a,c1,4b,g1,d1,4e1,b,d1,4c1,b,a,4g#,a,b,4c1,b,a,2.a,d1,a,4b,g1,d1,4e1,b,d1,4a,a1,e1,4f1,c#1,e1,4d1,c#1,b,4.a#,b,2.b,b1,f1,4g#1,f1,e1,4a1,e1,g_1,4f1,e1,d1,4g1,d1,f1,4e1,a1,e1,4f1,c#1,e1,4d#1,2b,e1,b,4c1,d1,a,4b,c1,g,4a_,b,f,4g,f,e,4d#,e,f,4g,f,e,2.e";
+//
+//    Bass (same base duration for synch)          0     1           2           3           4             5           6           7              8       9            10             11            12             13            14              15            16                 17              18            19           20             21                 22               23       24
+const char SONG_12[] PROGMEM = ":d=8,o=4,b=142,s=f:p,g,f,4e,4a,4b,4a,4g,4f,4e,4f,4g,4a,4b,4a,4g,4b,e,f,g,f,4e,4a,4b,4a,4g,4f,4e,4f,4g,4c1,4d1,4d1,2.d1,4g,4f,4d1,4g,4b,4c1,4e#,4f,4d1,4e1,4a,4e1,4e,a,b,a,g,4f,4d1,4g,4b,4c1,4g#,4a,4c#1,4d1,4a#,4b,4e1,4f1,4f,b,a#,b,c#1,4d#1,4b,4e1,4d1,4c#1,4a,4d1,4c1,4b,4g,4c1,4b,4a,4f,4.b,c1,b,a,4g#,a,e1,4f1,g,d#1,4e1,f,c#1,4d#1,4e,4a,4b,4a,2b,2.e";
+//*/
+
+//*
+// ==== LV Beethoven - Fur Elise - WoO59 ====
+//
+//    Soprano                                  0       1                 2        3          4             5                 6        7          9           10           11           12           13          14                 15                 16                17       18         19            20                21       22         23           
+const char SONG_21[] PROGMEM = ":d=8,o=5,b=144:b,c1,d1,e1,d#1,e1,b,d1,c1,4.a,4p,a,4.b,p,g#,b,4.c1,p,e1,d#1,e1,d#1,e1,b,d1,c1,4.a,4p,a,4.b,p,c1,b,4.a,b,c1,d1,4.e1,g,f1,e1,4.d1,f,e1,d1,4.c1,e,d1,c1,4b,e,e,e1,e,e1,e1,e2,d#1,e1,d1,e1,c1,e1,d#1,e1,d1,e1,d#1,e1,b,d1,c1,4.a,4p,a,4.b,p,g#,b,4.c1,p,e1,d#1,e1,d#1,e1,b,d1,c1,4.a,4p,a,4.b,p,c1,b,4a,p";//,b,c1,d1";
+//
+//    Bass (same base duration for synch)      0    1   2               3             4             5   6               7             9           10        11          12          13       14  15  16  17              18            19            20  21              22            23         
+const char SONG_22[] PROGMEM = ":d=8,o=4,b=144:p,4p,2.p,a,c1,e1,c1,e1,p,g,d1,e1,e1,4p,a,c1,e1,e1,4p,2.p,a,c1,e1,c1,e1,p,g,d1,e1,e1,4p,a,c1,e1,4.p,c,e,g,4.p,b-1,f,g,4.p,a-1,c,e,4.p,e-1,e,2p,2.p,2.p,2.p,a,c1,e1,c1,e1,p,g,d1,e1,e1,4p,a,c1,e1,e1,4p,2.p,a,c1,e1,c1,e1,p,g,d1,e1,e1,4p,a,c1,e1";//,p,4p";
+//*/
+
+//*
+// ==== M Jarre - Lara's theme ====
+//
+//    Soprano                                      1             2   3           4   5        6   7            8   9           10  11          12  13       14  15          16  17      18        19      20  21       22          23       24   25        26      27      28  29             30             31      35          36  37          38  39       40  41         42       43  44
+const char SONG_31[] PROGMEM = ":d=8,o=5,b=140,s=f:p,4.b-1,4d,a#,2.b,f,a,g,4d,c#,2.c,4.c,4d,e,2.f,e,d,c#,4d,c1,2.b,4.b-1,4d,a#,2.b,f,a,g,4d,c#,2.c,4.c,4d,e,2.f,e,d#,d,4c,a,2.g,4.e,4.g+4.g,a,g,f,4.g,4.e,2.d,4.d,4.f_+4f_,f,g,f,g,4.a,4.a#,2.c1,4.d,4d,d#,4.d,4.f,2g+g,g#,2.g,g,g#,g,f_,d#,d,d#,f_,d#,d,c,c,2g-1,4p,4.g-1,4d,a#,2.b,f,a,g,4d,c#,2.c,4.c,4d,e,2.f,e,d,c#,4.c+4.c,4.c1,2.b+2.b";
+//
+//    Soprano                                      1             2   3           4   5        6   7            8   9           10  11          12  13       14  15          16  17      18        19      20  21       22          23       24   25        26      27      28  29             30             31      35          36  37          38  39       40  41      42      43  44
+//const char SONG_31[] PROGMEM = ":d=8,o=5,b=140,s=f:p,4.b-1,4d,a#,2.b,f,a,g,4d,c#,2.c,4.c,4d,e,2.f,e,d,c#,4d,c1,2.b,4.b-1,4d,a#,2.b,f,a,g,4d,c#,2.c,4.c,4d,e,2.f,e,d#,d,4c,a,2.g,4.e,4.g+4.g,a,g,f,4.g,4.e,2.d,4.d,4.f_+4f_,f,g,f,g,4.a,4.a#,2.c1,4.d,4d,d#,4.d,4.f,2g+g,g#,2.g,g,g#,g,f_,d#,d,d#,f_,d#,d,c,c,2g-1,4p,4.g-1,4d,a#,2.b,f,a,g,4d,c#,2.c,4.c,4d,e,2.f,e,d,c#,2.c,4.c1,2.b+2.b";
+//
+//    Bass (same base duration for synch)          1            2   3              4     5            6   7           8   9          10  11             12    13           14  15             16    17      18          19      20    21         22         23      24  25                 26      27             28  29             30             31            35          36  37          38  39       40  41         42      43  44
+const char SONG_32[] PROGMEM = ":d=8,o=4,b=140,s=f:p,4.b-1,4d,f,2.g,d,g,d,4a-1,a-1,2.a-1,4.a-1,4b-1,d,2.d,e,d,c#,4d,a,2.g,4.b-1,4d,f,2.g,d,g,d,4b-1,b-1,2.a-1,4.a-1,4b-1,c,2.d,c,c,c,4a-1,a-1,2.g-1,4.c,4.e+4.e,f_,e,d#,4.e,4.c,2.b-1,4.b_-1,4.d+4d,f,g,f,g,4.a,4.g,2.a,d,a#-1,a-1,4g-1,d#,4.d+4.d,g-1,d#,d,4c,g#,2.g,g,g#,g,f_,d#,d,d#,f_,d#,d,c,c,b-1,d,d#,4.f_,4.b-1,4d,a#,2.b,f,a,g,4d,c#,2.c,4.c,4d,e,2.f,e,d,c#,4.c+4.c,4.a,2.g+2.g";
+//*/
+
+//*
+// ==== S Joplin - The entretainer ====
+//
+//    Soprano                                    1                       2                 3                          4                5                6                7                     8            9                10            11                       12           13               14               15                    16            17                      18                      19                    20
+//const char SONG_41[] PROGMEM = ":d=16,o=5,b=80:p,d2,e2,c2,a1+a1,b1,8g1,d1,e1,c1,a+a,b,8g,d,e,c,a-1+a-1,b-1,a-1,a_-1,8g-1,8p,8g1,d,d#,e,8c1,e,8c1,e,c1+4c1+c1,e2,f2,f#2,g2,e2,f2,g2+g2,b1,8d2,4c1+8c1,d,d#,e,8c1,e,8c1,e,c1+4c1+8c1,a1,g1,f#1,a1,c2,e2+e2,d2,c2,a1,4d2+8d2,d,d#,e,8c1,e,8c1,e,c1+4c1+c1,c2,d2,d#2,e2,c2,d2,e2+e2,b1,8d2,4c2+8c2,c2,d2,e2,c2,d2,e2+e2,c2,d2,c2,e2,c2,d2,e2+e2,c2,d2,c2,e2,c2,d2,e2+e2,b1,8d2,4c2+8c2,d,d#";
+//
+//    Bass (same base duration for synch)        1                       2                 3                          4               5             6             7                8             9             10            11            12          13            14            15               16            17              18             19             20
+//const char SONG_42[] PROGMEM = ":d=16,o=4,b=80:p,d2,e2,c2,a1+a1,b1,8g1,d1,e1,c1,a+a,b,8g,d,e,c,a-1+a-1,b-1,a-1,a_-1,8g-1,8p,8g-1,8b,8c,8c1,8g,8c1,8f,8c1,8e,8c1,8g-1,8c1,8g-1,8b,8c,8c1,8c1,8b,8c,8c1,8g,8c1,8f,8c1,8e,8e_,8d,8c1,8d,8c1,8b,8g,8a,8b,8c,8c1,8g,8c1,8f,8c1,8e,8c1,8g-1,8c1,8g-1,8b,8c,8c1,8e1,8p,8c1,8e1,8b_,8e1,8a,8f1,8a_,8f1,8g,8e1,8g-1,8b,8c1,8g,8a,8b";
+//
+//    Soprano                                  x    5              6             7                   8         9                10         11                     12        13             14            15                  16         17                    18                    19                  20
+const char SONG_41[] PROGMEM = ":d=16,o=4,b=80:d,d#,e,8c1,e,8c1,e,4.c1,c2,d2,d#2,e2,c2,d2,8e2,b1,8d2,4.c2,d,d#,e,8c1,e,8c1,e,c1+4.c1,a1,g1,f#1,a1,c2,8e2,d2,c2,a1,4.d2,d,d#,e,8c1,e,8c1,e,4.c1,c2,d2,d#2,e2,c2,d2,8e2,b1,8d2,4.c2,c2,d2,e2,c2,d2,8e2,c2,d2,c2,e2,c2,d2,8e2,c2,d2,c2,e2,c2,d2,8e2,b1,8d2,4.c2";//,d,d#";
+//
+//    Bass (same base duration for synch)      x  5             6             7                8             9             10            11            12          13            14            15               16            17              18             19             20
+const char SONG_42[] PROGMEM = ":d=16,o=3,b=80:8p,8c,8c1,8g,8c1,8f,8c1,8e,8c1,8g-1,8c1,8g-1,8b,8c,8c1,8c1,8b,8c,8c1,8g,8c1,8f,8c1,8e,8e_,8d,8c1,8d,8c1,8b,8g,8a,8b,8c,8c1,8g,8c1,8f,8c1,8e,8c1,8g-1,8c1,8g-1,8b,8c,8c1,8e1,8p,8c1,8e1,8b_,8e1,8a,8f1,8a_,8f1,8g,8e1,8g-1,8b,8c1,8g,8a";//,8b";
+//*/
+
+//*
+// ==== M Theoderakis - Zorba's dance ====
+//
+//    Soprano                                      2              3               4                                  5               6             7                                8              9                               10                         11    23                       24                                     25                       26                      27                     28                                   29                     30  21       22          23       24   25        26      27      28  29             30             31      35          36  37          38  39       40  41         42       43  44
+const char SONG_51[] PROGMEM = ":d=16,o=5,b=80,s=f:4.p,16.p,32c#1+4.d1,16.p,32c#1+4d1,32.p,32e1,32d1,32c#1,32d1,32e1+4.d1,16.p,32c#1+4.d1,16.p,32b+4c1,32.p,32d1,32c1,32b,32c1,32d1+4.c1,16.p,32a#+4b,32p,32b,32c1,32b,32a,32g,32b+4a,32p,32a,32b,32a,32f,32a+4g,4p,c#1+d1,d1,d1,d1,d1,d1,d1,d1,d1,d1,d1,d1,d1,32e1,32d1,32c#1,32d1,c#1+d1,d1,d1,d1,d1,d1,d1,d1,d1,d1,d1,d1,d1,d1,d1,b+c1,c1,c1,c1,c1,c1,c1,c1,c1,c1,c1,c1,c1,32d1,32c1,32b,32c1,b+c1,c1,c1,c1,c1,c1,c1";//,
+//
+//    Bass (same base duration for synch)          2               3               4               5               6               7                 8                 9               10            11              23              24              25              26              27              28              29              30              21         22         23      24  25                 26      27             28  29             30             31            35          36  37          38  39       40  41         42      43  44
+const char SONG_52[] PROGMEM = ":d=16,o=3,b=80,s=f:8g-1,8b,8d-1,8b,8g-1,8b,8d-1,8b,8g-1,8b,8d-1,8b,8g-1,8b,8d-1,8b,8g-1,8b,8d-1,8b,8g-1,8c1,8e-1,8c1,8g-1,8c1,8e-1,8c1,8g-1,8b,8d-1,8b,8c,8a,8d-1,8f,8g-1,8b,8d-1,8b,8g-1,8b,8d-1,8b,8g-1,8b,8d-1,8b,8g-1,8b,8d-1,8b,8g-1,8b,8d-1,8b,8a-1,8a,8e-1,8a,8a-1,8a,8e-1,8a,8a-1,8a,8e-1,8a";//,
+//*/
+
+// Zelda
+const char SONG_61[] PROGMEM = ":d=16,o=5,b=160,f=aeb:2b,12p,12p,12b,12b,12b,12b,8.b,16a,4b,12p,12p,12b,12b,12b,12b,8.b,16a,4b,12p,12p,12b,12b,12b,12b,8b,16f,16f,8f,16f,16f,8f,16f,16f,8f,8f,   4b,4f+8.f,b,b,c1,d1,e1,2f1,8p,8f1,12f1,12g_1,12a1,   2b1,12p,12b1,12b1,12b1,12a1,12g_1,8.a1,g_1,2f1,4f1,8e1,e1,f1,2g_1,8f1,8e1,8d_1,d_1,e1,2f1,8e1,8d_1,8c1,c1,d1,2e#1,4g1,8f1,f,f,8f,f,f,8f,f,f,8f,8f,  4b,4f+8.f,b,b,c1,d1,e1,2f1,8p,8f1,12f1,12g_1,12a1,  2b1,4p,4d_2,4c2,4a#1,4p,4f1,2g_1,4p,4b1,4a#1,4f1,4p,4f1,2g_1,4p,4b_1,4a#1,4f1,4p,4d1,2e1,4p,4g_1,4f1,4d_1,4p,4b,8c1,16c1,16d1,4e#1,4p,4g1,8f1,16f,16f,8f,16f,16f,8f,16f,16f,8f,8f,   1b,1p";
+const char SONG_62[] PROGMEM = ":d=16,o=4,b=160,f=aeb:4b,12b,12b,12b,4b,12b,12b,12b,4a,12a,12a,12a,4a,12a,12a,12a,4g_,12g_,12g_,12g_,4g_,12g_,12g_,12g_,4f,4f,4f,8g,8a#,   4d,12d,12d,12c,8.d,d,d,e,f,g,8.a,b,b,c1,d1,e1,4f1,12a,12b,12c1,   8.d_1,g_,g_,a,b,c1,12d_1,12p,12d_1,12d_1,12c1,12b,8.d_,a,12a,12a,12g_,8.a,a,12a,12g_,12a,8g_,g_,f,8g_,g_,a,4b,8a,8g_,8f,f,e,8f,f,g_,4a,8g_,8f,4e#,8e#,e#,f,8g,g,a#,8b,8c1,8a#,a#-1,a#-1,8a#-1,a#-1,a#-1,8a#-1,a#-1,a#-1,8a#-1,8a#-1,  4d,12d,12d,12c,8.d,d,d,e,f,g,8.a,b,b,c1,d1,e1,4f1,12a,12b,12c1,  2b,4p,4e#1,4e#1,4c1,4p,4a#,12e#-2,12b-2,12d_-1,12e#-1,12b-1,12d_,4e#,4p,4f,12f-2,12f-2,12f-2,4f-2,4p,12e#-2,12b-2,12d_-1,12e#-1,12b-1,12d_,4e#,4p,4f,12f-2,12f-2,12f-2,4f-2,4p,2g_,4p,4c_1,4b,4f,4p,4d_,4e#,8e#,16e#,16f,8g,16g,16a#,8b,8c1,8a#,16a#-1,16a#-1,8a#-1,16a#-1,16a#-1,8a#-1,16a#-1,16a#-1,8a#-1,8a#-1,  1d-1,1p";
+
+//Spider Dance
+//const char SONG_71[] PROGMEM = ":b=115,d=16,f=adeb,o=5:8c1,8a,8f,8g,  p,a,8f,  g,f_,b,d,  p,a,f,e,  g,a,g-1,a-1,c,a-1,g-1,  a,a,8p,16p,   8p,8b-1,8p,8b-1,8p,8b-1,8p,8a-1,  8a,8d,8c1,8f,  8b,8a,4g";
+//const char SONG_72[] PROGMEM = ":b=115,d=16,f=adeb,o=3:f,c1,b,c1,f,c1,b,c1,d,c_1,b,c_1,c,c1,g,b,  f,c1,b,c1,  g,c1,b,c1,  a,c1,b,c1,  b,d1,c1,d1,   d,a,g,a, d,b,a,b,  d,c1,b,c1,  d,d1,c1,d1, 4c, 8p,8c,4c,  c1,d#1,e#1";
+const char SONG_71[] PROGMEM = ":b=115,d=16,f=adeb,o=5:8c1,8a,8f,8g";//,  p,a,8f,  g,f_,b,d,  p,a,f,e,  g,a,g-1,a-1,c,a-1,g-1,  a,a,8p,16p,   8p,8b-1,8p,8b-1,8p,8b-1,8p,8a-1,  8a,8d,8c1,8f,  8b,8a,4g";
+const char SONG_72[] PROGMEM = ":b=115,d=16,f=adeb,o=3:f,c1,b,c1,f,c1,b,c1,d,c_1,b,c_1,c,c1,g,b";//,  f,c1,b,c1,  g,c1,b,c1,  a,c1,b,c1,  b,d1,c1,d1,   d,a,g,a, d,b,a,b,  d,c1,b,c1,  d,d1,c1,d1, 4c, 8p,8c,4c,  c1,d#1,e#1";
+
+
+
+#define   SONG_TABLE_MAX  7
+const byte* const SONG_TABLE[][2] PROGMEM = {
+  {SONG_11, SONG_12},     // ==== JS Bach - Bourree in E minor - BWV996 ====
+  {SONG_21, SONG_22},     // ==== LV Beethoven - Fur Elise - WoO59 ====
+  {SONG_31, SONG_32},     // ==== M Jarre - Lara's theme ====
+  {SONG_41, SONG_42},     // ==== S Joplin - The entretainer ====
+  {SONG_51, SONG_52},     // ==== M Theoderakis - Zorba's dance ====
+  {SONG_61, SONG_62},     // Zelda
+  {SONG_71, SONG_72},     // Spider Dance
+};
 
 
-#include "Dsongs.h"
 
-//#include <MusicWithoutDelay.h>
-#include "MusicWithoutDelay.h"
-MusicWithoutDelay track1;
-MusicWithoutDelay track2;
 
 
 
-//#define   CHAN            CHA
-#define   CHAN            CHB
-// 1 pin is reserved to connect the speaker
-//      Board               CHAN A  CHAN B
-//      -----------------------------------
-//      Uno, Nano           11     [3]
-//      Mega                10      9
-//      Teensy 2            A9      -
-//      Leonardo, Micro     6       -
-#define   PIN_BUZZER      3
 
-#define   PIN_MUTE        4     // optional, for the case we re using an amplifier with mute function
 
 
-
-byte      SHAPE           = 0;
-const char* SHAPE_NAME[]  = {"SINE", "TRIANGLE", "SQUARE", "SAW", "RAMP", "NOISE"};
-
-byte      ENVELOPE        = 1;
-//#define   ENVELOPE        ENVELOPE0     // clavecin
-//#define   ENVELOPE        ENVELOPE1     // organ
-//#define   ENVELOPE        ENVELOPE2     //
-//#define   ENVELOPE        ENVELOPE3     // flute
-
-byte      SUSTAINS        = 1;
-const char* SUSTAIN_NAME[] = {"NONE", "SUSTAIN", "REVERSE"};
-
-
-
-bool      playRepeat      = false;
-bool      playAll         = false;
-byte      song2play       = SONG_TABLE_MAX - 1;
-
-byte      playXtimes;     // how many times to repeat a song or songs
-
-word      ledCount;
-word      ledTempo;
-
-
-
-// =========================================================
-// Main
-// =========================================================
-
-void setup()
-{
-  Serial.begin(SERIAL_SPEED);
-  while (!Serial);
-
-  pinMode(LED_BUILTIN,    OUTPUT);      // set the led pin
-  digitalWrite(PIN_MUTE,  LOW);         // un-mute the amplifier (optional)
-
-  track1.begin(CHAN, SHAPE, ENVELOPE, 0);
-  track2.begin(CHAN, SHAPE, ENVELOPE, 0);
- 
-  clearScreen();
-  printInstructions();
-  
-  setSong(0);
-  setRepeat();
-  setSongPause(false);
-}
-
-
-
-void loop()
-{
-  track1.update();
-  track2.update();
-
-  //while(true);
-  
-  ledBlink();
-
-  commands();
-
-  //if (track1.isEnd())
-  //if (track1.isStart())
-  if (track1.isEnd() || track1.isStart())
-  {
-    if (playAll)
-    {
-      song2play = (++song2play) % SONG_TABLE_MAX;
-      setSong(0);
-      clearScreen();
-      printInstructions();
-    }
-    
-    if (!playRepeat)
-    {
-      setSongSkip(0);   // keep synch
-      
-      //Serial.print("loop (end): sf="); Serial.print(track1.isEnd()); Serial.print(", fb"); Serial.print(track1.isStart()); Serial.print(", ctime"); Serial.println(track1.getCurrentTime());
-      if (!playXtimes) 
-      {
-        if (!track1.isPaused())
-        {
-          //Serial.print("loop (set pause off): sf="); Serial.print(track1.isEnd()); Serial.print(", fb"); Serial.print(track1.isStart()); Serial.print(", ctime"); Serial.println(track1.getCurrentTime());
-          setSongPause(true);
-          //Serial.print("loop (set pause on): sf="); Serial.print(track1.isEnd()); Serial.print(", fb"); Serial.print(track1.isStart()); Serial.print(", ctime"); Serial.println(track1.getCurrentTime());
-          clearScreen();
-          printInstructions();
-        }
-      }
-      else
-        playXtimes--;
-    }
-  }
-}
-
-
-
-// =========================================================
-// Music
-// =========================================================
-
-void setSong(unsigned long skip)
-{
-  //track1.newSong((byte*)pgm_read_ptr(&SONG_TABLE[song2play][0])).begin(CHAN, SHAPE, ENVELOPE, 0);
-  //track2.newSong((byte*)pgm_read_ptr(&SONG_TABLE[song2play][1])).begin(CHAN, SHAPE, ENVELOPE, 0);
-  track1.newSong((byte*)pgm_read_ptr(&SONG_TABLE[song2play][0]));
-  track2.newSong((byte*)pgm_read_ptr(&SONG_TABLE[song2play][1]));
-
-  //track1.overrideSustain(true);
-  //track1.setSustain(NONE);
-  //track2.overrideSustain(true);
-  //track2.setSustain(NONE);
-
-  if (skip) setSongSkip(skip);
-
-  ledTempo = (track1.getBPM()) * 100;
-}
-
-void setSongSkip(unsigned long skip)
-{
-  track1.skipTo(skip);
-  track2.skipTo(skip);
-}
-
-void setSongBackward()
-{
-  byte isBack = track1.isBackwards();
-  track1.reverse(!isBack);
-  track2.reverse(!isBack);
-}
-
-void setSongPause(bool isSongPaused)
-{
-  track1.pause(isSongPaused);
-  track2.pause(isSongPaused);
-}
-
-void setSongShape()
-{
-  track1.setWave(SHAPE);
-  track2.setWave(SHAPE);
-}
-
-void setSongEnvelope()
-{
-  track1.setEnvelope(ENVELOPE);
-  track2.setEnvelope(ENVELOPE);
-}
-
-void setSongSustain()
-{
-  track1.overrideSustain(true);
-  track2.overrideSustain(true);
-  track1.setSustain(SUSTAINS);
-  track2.setSustain(SUSTAINS);
-}
-
-void ledBlink()
-{
-  ledCount++;
-  if      (ledCount == ledTempo)
-  {
-    digitalWrite(LED_BUILTIN, HIGH);
-  }
-  else if (ledCount >= 2 * ledTempo)
-  {
-    digitalWrite(LED_BUILTIN, LOW);
-    ledCount = 0;
-  }
-}
-
-
-
-// =========================================================
-// Commands
-// =========================================================
-
-void commands()
-{
-  if (!Serial.available()) return;
-
-  char str  = Serial.read();
-  byte num  = byte(str - '0');
-  //Serial.print(str, DEC); Serial.print(','); Serial.print(str); Serial.print(','); Serial.println(num);  
-  
-  if (num > 0 && num <= SONG_TABLE_MAX)
-  {
-    song2play = num - 1;
-    setSong(0);
-    setRepeat();
-  }
-  else
-  {
-    switch (str)
-    {
-      case 'p':
-        Serial.print("p1: "); Serial.print(track1.isEnd()); Serial.print(", "); Serial.print(track1.isStart()); Serial.print(", "); Serial.println(track1.getCurrentTime());
-        setSongPause(!track1.isPaused());
-        if (track1.isEnd()) setRepeat();
-        Serial.print("p2: "); Serial.print(track1.isEnd()); Serial.print(", "); Serial.print(track1.isStart()); Serial.print(", "); Serial.println(track1.getCurrentTime());
-        break;
-        
-      case 'f':
-        setSongSkip(track1.getCurrentTime() + ((track1.isBackwards()) ? - 10000L : 10000L));
-        break;
-          
-      case 'b':
-        setSongBackward();
-        break;
-        
-      case 'r':
-        playRepeat = !playRepeat;
-        setRepeat();
-        break;
-        
-      case 'a':
-        playAll    = !playAll;
-        setRepeat();
-        break;
-        
-      case 'w':
-        SHAPE = (++SHAPE) % 6;
-        setSongShape();
-        break;
-        
-      case 'e':
-        ENVELOPE = (++ENVELOPE) % 4;
-        setSongEnvelope();
-        break;
-        
-      case 's':
-        SUSTAINS = (++SUSTAINS) % 3;
-        setSongSustain();
-        break;
-        
-      case 'x':
-        showPartition(true, false);
-        printInstructions();
-        return;
-        break;
-        
-      case 'y':
-        showPartition(false, false);
-        printInstructions();
-        return;
-        break;
-
-      default:
-        return;
-    }
-  }
-
-  clearScreen();
-  printInstructions();
-}
-
-void setRepeat()
-{
-  if (playAll) playXtimes = SONG_TABLE_MAX;
-  else         playXtimes = 2;
-}
-
-
-
-// =========================================================
-// Instructions
-// =========================================================
-
-void printInstructions()
-{ 
-  printLine();
-  Serial.print(F("Selected song : ======= ")); Serial.print(song2play + 1); Serial.println(F(" =======")); 
-  Serial.println(F("Type :"));
-  printInstrItem(); Serial.print(F("a number] to select a song from 1 to ")); Serial.println(SONG_TABLE_MAX);
-  printInstrItem(); Serial.print(F("p] to Play/Pause")); printInstrParam(); Serial.println((track1.isPaused()) ? F("PAUSE") : F("PLAY"));
-  printInstrItem(); Serial.println(F("f] to Skip FORWARD (10s)."));
-  printInstrItem(); Serial.print(F("b] to Play  BACKWARD")); printInstrValid(track1.isBackwards());
-  printInstrItem(); Serial.print(F("r] to REPEAT song(s)")); printInstrValid(playRepeat);
-  printInstrItem(); Serial.print(F("a] to play ALL songs")); printInstrValid(playAll);
-  printInstrItem(); Serial.print(F("w] to cycle the WAVE shapes (6)")); printInstrParam(); Serial.println(SHAPE_NAME[SHAPE]);
-  printInstrItem(); Serial.print(F("e] to cycle the ENVELOPES   (4)")); printInstrParam(); Serial.print(F("ENVELOPE")); Serial.println(ENVELOPE);
-  printInstrItem(); Serial.print(F("s] to cycle the SUSTAINS    (3)")); printInstrParam(); Serial.println(SUSTAIN_NAME[SUSTAINS]);
-  printInstrItem(); Serial.println(F("x] to show Music SHEET of the song"));
-  printInstrItem(); Serial.println(F("y] to show NOTES from the song"));
-  printLine();
-}
-
-void clearScreen()
-{
-  byte num = SCREEN_SCROLL;
-  while (num--) Serial.println();
-}
-
-void printLine()
-{
-  Serial.println(); Serial.println(F("============================================="));
-}
-
-void printInstrItem()
-{
-  Serial.print(F("   - ["));
-}
-
-void printInstrParam()
-{
-  Serial.print(F(". Current is : "));
-}
-
-void printInstrValid(byte isValid)
-{
-  printInstrParam(); Serial.println((isValid) ? F("ON") : F("OFF"));
-}
-
-
-
-// =========================================================
-// here the big part to show a partition
-// ...
-// I hate VERBOSE!!!! :-P
-// =========================================================
-
-#define     PARTITION_TEXT_LINE_AMOUNT    7
-
-//                            0       1    2     3    4     5    6    7     8    9     10   11    12
-const char* alphaNote[]   = {"rest", "c", "c#", "d", "d#", "e", "f", "f#", "g", "g#", "a", "a#", "b"};
-
-//                            1    2    4    8    16    32    64
-const char* charNote[]    = {"o", "d", "@", "{", "{{", "{3", "{4"};
-#define     CHAR_NOTE_MAX   7
-
-const char*         mySong;
-uint16_t            loc;
-uint16_t            pLoc;
-uint8_t             default_oct;
-uint8_t             default_dur;
-int8_t              autoFlat[5];   // you can only have 5 of the black keys ;)
-int8_t              autoSharp[5];  //
-uint32_t            duration;
-uint8_t             note;
-int8_t              scale;
-uint8_t             num;
-byte                notes[200][3];
-int                 songLen;
-
-void _getCodeNote()
-{
-  while (isWhitespace(pgm_read_byte_near(mySong + loc))) loc++;
-
-  // first, get note duration, if available
-  num = 0;
-  while (isdigit(pgm_read_byte_near(mySong + loc)))
-  {
-    num = (num * 10) + (pgm_read_byte_near(mySong + loc++) - '0');
-  }
-
-  if (num)    duration = num << 1;
-  else        duration = default_dur;
-
-  // now, get optional '.' dotted note
-  if (pgm_read_byte_near(mySong + loc) == '.')
-  {
-    duration++;
-    loc++;
-  }
-
-
-  // now get the note
-  char alphaNote = pgm_read_byte_near(mySong + loc++); // ========> MOD:
-  note = 0;
-  switch (alphaNote)
-  {
-    case 'c':
-      note = 1;
-      break;
-    case 'd':
-      note = 3;
-      break;
-    case 'e':
-      note = 5;
-      break;
-    case 'f':
-      note = 6;
-      break;
-    case 'g':
-      note = 8;
-      break;
-    case 'a':
-      note = 10;
-      break;
-    case 'b':
-      note = 12;
-      break;
-  }                                                     // ========> MOD: end
-
-  // now, get optional and default '#' sharp and '_' flat
-  int8_t flat_sharp = 0;                    // ========> MOD:
-  if      (pgm_read_byte_near(mySong + loc) == '#')
-  {
-    flat_sharp++;
-    loc++;
-  }
-  else if (pgm_read_byte_near(mySong + loc) == '_')
-  {
-    flat_sharp--;
-    loc++;
-  }
-  /*
-  if (note)
-  {
-    byte i = 5;
-    while (i--)
-    {
-      if      (alphaNote == autoSharp[i])
-      {
-        flat_sharp++;
-        break;
-      }
-      else if (alphaNote == autoFlat[i])
-      {
-        flat_sharp--;
-        break;
-      }
-    }
-    note += flat_sharp % 2;   // be sure values are from {-1, 0, 1} 
-  }
-  //*/
-
-  // now, get octave
-  scale = 1;                              // ========> MOD:
-  if (pgm_read_byte_near(mySong + loc) == '-')
-  {
-    loc++;
-    scale = -1;
-  }
-  if (isdigit(pgm_read_byte_near(mySong + loc)))
-  {
-    scale *= pgm_read_byte_near(mySong + loc++) - '0';
-    scale += default_oct;
-    //if      (scale < 1) scale = 1;
-    //else if (scale > 7) scale = 7;
-  }
-  else
-  {
-    scale = default_oct;
-  }
-
-  // now, end with global '#' sharp and '_' flat
-  if (note)
-  {
-    byte i = 5;
-    while (i--)
-    {
-      if      (alphaNote == autoSharp[i])
-      {
-        flat_sharp++;
-        break;
-      }
-      else if (alphaNote == autoFlat[i])
-      {
-        flat_sharp--;
-        break;
-      }
-    }
-    note += flat_sharp % 2;   // be sure values are from {-1, 0, 1} 
-
-    if      (!note)           // take care about fake flat c
-    {
-      note = 12;
-      scale--;
-    }
-    else if (note > 12)       // take care about fake sharp b
-    {
-      note = 1;
-      scale++;
-    }
-  }
-  
-  if      (scale < 1) scale = 1;
-  else if (scale > 7) scale = 7;
-}
-
-void showPartition(bool showPartition, bool showAll)
-{
-  //  getTotalTime()              //gets totalTime of song in milliseconds
-  //  getCurrentTime()            //gets currentTime of song in milliseconds
-  //  getBPM()                    //gets tempo of song
-  //  getOctave()                 //gets the song's octave
-  //  getName()                   //get name of song
-  //  getNoteAsFrequency(int n);  //returns a Note as a frequency
-
-  byte start_song = 0;
-  byte end_song   = SONG_TABLE_MAX;
-  if (!showAll)
-  {
-    start_song = song2play;
-    end_song   = start_song + 1;
-  }
-  
-  for (byte song_num = start_song; song_num < end_song; song_num++)
-  {
-    for (byte track_num = 0; track_num < 2; track_num++)
-    {
-      printLine();
-      Serial.print(F("song: ")); Serial.print(song_num + 1);
-      Serial.print(F(" / track: ")); Serial.print(track_num + 1); Serial.print(", "); Serial.println((track_num) ? F("Bass") : F("Soprano"));
-      if (!showPartition) printLine();
-      
-      
-      default_oct     = 4;
-      default_dur     = 1 << 1;
-      note            = 0;
-      mySong          = (byte*)pgm_read_ptr(&SONG_TABLE[song_num][track_num]);
-      num             = 0;
-      loc             = 0;
-      songLen         = strlen_P(mySong);
-
-      //memset(songName, 0, SONG_NAME_LENGTH);
-      memset(autoFlat, 0, 5);
-      memset(autoSharp, 0, 5);
-
-      byte notes_idx  = 0;
-
-
-      // get the name
-      if (pgm_read_byte_near(mySong) != ':')
-      {
-        while (pgm_read_byte_near(mySong + loc) != ':')
-        {
-          //if (num < SONG_NAME_LENGTH) songName[num] = pgm_read_byte_near(mySong + loc++);
-          //num++;
-          loc++;
-        }
-      }
-
-      loc++;    //skip semicolon
-
-      // get header default values
-      while (pgm_read_byte_near(mySong + loc) != ':')
-      {
-        switch (pgm_read_byte_near(mySong + loc))
-        {
-          case ',':
-            loc++;
-            break;
-          case 'd':
-            loc += 2;       // skip "d="
-            num  = 0;
-            while (isDigit(pgm_read_byte_near(mySong + loc)))
-            {
-              num = (num * 10) + (pgm_read_byte_near(mySong + loc++) - '0');
-            }
-            if (num > 0) default_dur = num << 1;
-            break;
-          case 'o':
-            loc += 2;        // skip "o="
-            num  = pgm_read_byte_near(mySong + loc++) - '0';
-            if (num >= 1 && num <= 7) default_oct = num;
-            break;
-          case 'b':
-            loc += 2;       // skip "b=" get BPM
-            num  = 0;
-            while (isDigit(pgm_read_byte_near(mySong + loc)))
-            {
-              num = (num * 10) + (pgm_read_byte_near(mySong + loc++) - '0');
-            }
-            //bpm  = num;
-            //wholenote = (60 * 1000L / bpm) * 4;
-            break;
-          case 'f':
-            loc += 2;       // skip "f="
-            num  = 0;
-            while (isAlpha(pgm_read_byte_near(mySong + loc)) && num < 5)
-            {
-              autoFlat[num++] = (char)pgm_read_byte_near(mySong + loc++);
-            }
-            break;
-          case 's':
-            loc += 2;       // skip "s="
-            num  = 0;
-            while (isAlpha(pgm_read_byte_near(mySong + loc)) && num < 5)
-            {
-              autoSharp[num++] = (char)pgm_read_byte_near(mySong + loc++);
-            }
-            break;
-        }
-      }
-
-
-      while (loc < strlen_P(mySong))
-      {
-        if (pgm_read_byte_near(mySong + loc) == ':') loc++;
-
-
-
-        _getCodeNote();
-        while (isWhitespace(pgm_read_byte_near(mySong + loc))) loc++;
-        if (pgm_read_byte_near(mySong + loc) == ',') loc++;
-        if (pgm_read_byte_near(mySong + loc) == '+') loc++;
-
-
-
-        notes[notes_idx][0] = duration;
-        notes[notes_idx][1] = note;
-        notes[notes_idx][2] = scale;
-
-        if (!showPartition)
-        {
-          Serial.print(F("n")); Serial.print(notes_idx + 1);
-          Serial.print(F(", oct=")); Serial.print(notes[notes_idx][2]);
-          Serial.print(F(", dur=")); Serial.print(notes[notes_idx][0] >> 1);
-          if (notes[notes_idx][0] & 0x01) Serial.print('.');
-          Serial.print(F(", note=")); Serial.print(alphaNote[notes[notes_idx][1]]);
-          Serial.println();
-        }
-        notes_idx++;
-      }
-
-
-      if (!showPartition) goto endPrint;
-
-      Serial.print(F("R = rest, "));
-      for (byte s = 0; s < CHAR_NOTE_MAX; s++)
-      {
-        Serial.print(charNote[s]);
-        Serial.print(F(" = 1/"));
-        Serial.print(0x01 << s);
-        Serial.print(F(",  "));
-        if (s == 2) Serial.println();
-      }
-      printLine();
-
-
-      /*
-        //                         0       1    2     3    4     5    6    7     8    9     10   11    12
-        const char* alphaNote[] = {"rest", "c", "c#", "d", "d#", "e", "f", "f#", "g", "g#", "a", "a#", "b"};
-        for (int k = 0; k < notes_idx; k++)
-        {
-        Serial.print("dur="); drawNote(notes[k][0]);
-        Serial.print(", oct="); Serial.print(notes[k][2]);
-        Serial.print(", note="); Serial.print(alphaNote[notes[k][1]]);
-        Serial.println();
-        }
-        //*/
-
-      byte l          = PARTITION_TEXT_LINE_AMOUNT * 4;
-      byte line_mid   = PARTITION_TEXT_LINE_AMOUNT * 2 + 2;
-      byte line_min   = line_mid - 5;
-      byte line_max   = line_mid + 5;
-      while (l--)
-      {
-        byte timeLine = 0;
-        for (int k = 0; k < notes_idx; k++)
-        {
-          char noteg      = notes[k][1];
-          byte flat_sharp = 0;
-          switch (noteg)
-          {
-            case 2:
-              noteg -= 1;
-              flat_sharp++;
-              break;
-            case 3:
-              noteg -= 1;
-              break;
-            case 4:
-              noteg -= 2;
-              flat_sharp++;
-              break;
-            case 5:
-              noteg -= 2;
-              break;
-            case 6:
-              noteg -= 2;
-              break;
-            case 7:
-              noteg -= 3;
-              flat_sharp++;
-              break;
-            case 8:
-              noteg -= 3;
-              break;
-            case 9:
-              noteg -= 4;
-              flat_sharp++;
-              break;
-            case 10:
-              noteg -= 4;
-              break;
-            case 11:
-              noteg -= 5;
-              flat_sharp++;
-              break;
-            case 12:
-              noteg -= 5;
-              break;
-          }
-          noteg--;
-
-          byte dur        = notes[k][0];
-          byte oct        = notes[k][2];
-          bool isdrown    = ((l % 2) ? false : true);
-
-          byte note_line;
-          if      (noteg < 0)   // a rest
-          {
-            note_line = line_mid;
-          }
-          else if (track_num)   // Bass
-          {
-            note_line = (noteg + line_mid - 8) + 7 * (1 + oct - default_oct);
-          }
-          else                  // Soprano
-          {
-            note_line = (noteg + line_mid - 6) + 7 * (oct - default_oct);
-          }
-
-          if (l == note_line)
-          {
-            drawNote(dur, flat_sharp, noteg, isdrown);
-          }
-          else
-          {
-            if      (l < line_min && l < note_line) isdrown = false;
-            else if (l > line_max && l > note_line) isdrown = false;
-            drawLine(isdrown);
-          }
-
-          if (l < line_min || l > line_max) isdrown = false;
-          dur = (dur >> 1);
-          if (dur < 8) drawLine(isdrown);
-          if (dur < 4) drawLine(isdrown);
-          Serial.print((isdrown) ? '-' : ' ');
-
-          
-          timeLine += 64 / (dur >> 1);                    // duration is times 2, first bit is for dot
-          if (dur & 0x01) timeLine += 64 / (dur & 0xFE);  // doted duration
-          if (timeLine >= 2 * 64)
-          {
-            timeLine = 0;
-            drawTimeLine(((l % 2) ? false : true), (l > line_min && l < line_max) ? true : false);
-          }
-
-        }
-        Serial.println();
-      }
-      endPrint:
-      ;
-    }
-  }
-}
-
-void drawNote(byte dur, byte flat_sharp, char noteg, bool isdrown)
-{
-  //                            1    2    4    8    16    32    64
-  //const char* charNote[]  = {"o", "d", "@", "|", "||", "|3", "|4"};
-  Serial.print((isdrown) ? '-' : ' ');
-
-  if ((dur >> 1) < 16)  Serial.print((isdrown) ? '-' : ' ');
-
-  if (noteg < 0)
-  {
-    Serial.print('R');
-  }
-  else
-  {
-    if (flat_sharp)       Serial.print((flat_sharp > 0) ? '#' : 'b');
-    else                  Serial.print((isdrown) ? '-' : ' ');
-  }
-
-  byte i = CHAR_NOTE_MAX;
-  byte durb;
-  while (i--)
-  {
-    if ((dur >> (i + 1)) & 0x01)
-    {
-      Serial.print(charNote[i]);
-      durb = dur - (0x01 << (i + 1));
-      break;
-    }
-  }
-  //Serial.print(((dur & 0x01) || (dur & 0x01)) ? '.' : ((isdrown) ? '-' : ' '));
-  Serial.print((durb) ? '.' : ((isdrown) ? '-' : ' '));
-
-  Serial.print((isdrown) ? '-' : ' ');
-}
-
-void drawLine(bool isdrown)
-{
-  byte i = 6;
-  while (i--) Serial.print((isdrown) ? '-' : ' ');
-}
-
-void drawTimeLine(bool isdrown, bool isVisible)
-{
-  Serial.print((isdrown && isVisible) ? '-' : ' ');
-  Serial.print((isVisible) ? '|' : ' ');
-  Serial.print((isdrown && isVisible) ? '-' : ' ');
-}
 
 
 
