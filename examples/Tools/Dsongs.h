@@ -58,7 +58,7 @@ const char SONG_72[] PROGMEM = ":b=115,d=16,f=adeb,o=3:f,c1,b,c1,f,c1,b,c1,d,c_1
 
 
 //test
-const char SONG_81[] PROGMEM = ":d=1,o=5,b=115,f=adeb:c1,a";
+const char SONG_81[] PROGMEM = ":d=1,o=5,b=115,f=adeb:c1,a,r,r";
 const char SONG_82[] PROGMEM = ":d=4,o=3,b=115,f=adeb:f,c1,b,c1,f,c1,b,c1, d,c_1,b,c_1,c,c1,g,b";
 
 
