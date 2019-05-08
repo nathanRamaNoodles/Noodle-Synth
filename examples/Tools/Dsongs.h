@@ -57,14 +57,20 @@ const char SONG_71[] PROGMEM = ":b=115,d=16,f=adeb,o=5:8c1,8a,8f,8g,  p,a,8f,  g
 const char SONG_72[] PROGMEM = ":b=115,d=16,f=adeb,o=3:f,c1,b,c1,f,c1,b,c1,d,c_1,b,c_1,c,c1,g,b,  f,c1,b,c1,  g,c1,b,c1,  a,c1,b,c1,  b,d1,c1,d1,   d,a,g,a, d,b,a,b,  d,c1,b,c1,  d,d1,c1,d1, 4c, 8p,8c,4c,  c1,d#1,e#1";
 
 
+//test
+const char SONG_81[] PROGMEM = ":d=1,o=5,b=115,f=adeb:c1,a";
+const char SONG_82[] PROGMEM = ":d=4,o=3,b=115,f=adeb:f,c1,b,c1,f,c1,b,c1, d,c_1,b,c_1,c,c1,g,b";
 
-#define   SONG_TABLE_MAX  4
+
+
 const byte* const SONG_TABLE[][2] PROGMEM = {
   {SONG_31, SONG_32},     // ==== M Jarre - Lara's theme ====
   {SONG_41, SONG_42},     // ==== S Joplin - The entretainer ====
   {SONG_61, SONG_62},     // Zelda
   {SONG_71, SONG_72},     // Spider Dance
+  {SONG_81, SONG_82},     // test
 };
+#define   SONG_TABLE_MAX  sizeof(SONG_TABLE) / 4
 
 
 
